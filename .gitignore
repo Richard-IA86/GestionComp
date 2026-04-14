@@ -1,0 +1,47 @@
+# ─── Python ───────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# ─── Entorno virtual ──────────────────────────
+.venv/
+venv/
+env/
+
+# ─── Variables de entorno (credenciales) ──────
+.env
+
+# ─── Datos de entrada (solo locales, no versionar) ────────────────────────────
+input_raw/
+Compensacion CAC-POSE/
+
+# ─── Outputs generados ────────────────────────
+output/reportes/*.xlsx
+output/reportes/*.pdf
+output/informes_direccion/*.xlsx
+output/informes_direccion/*.pdf
+
+# ─── Logs ─────────────────────────────────────
+logs/*.log
+logs/*.log.*
+
+# ─── Archivos temporales de Office ────────────
+~$*.xlsx
+~$*.xls
+~$*.docx
+
+# ─── IDEs ─────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+
+# ─── Sistema operativo ────────────────────────
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# ─── Playwright ───────────────────────────────
+playwright-report/
+test-results/
