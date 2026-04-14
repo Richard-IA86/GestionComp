@@ -58,4 +58,8 @@ ARCHIVOS_ESPERADOS = [
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+# ─── VPN ─────────────────────────────────────────────────────────────────────
+VPN_INTERFACE = os.getenv("VPN_INTERFACE", "wg0")
+VPN_TARGET_IP = os.getenv("VPN_TARGET_IP", "10.2.1.81")
+
 LOG_FILE = LOGS_DIR / "compensaciones.log"

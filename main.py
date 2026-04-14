@@ -62,7 +62,14 @@ def main() -> int:
     logger.info(
         f"═══ Compensaciones — Informe {fecha.strftime('%d/%m/%Y')} ═══"
     )
+    # ── 0. VPN ──────────────────────────────────────────────────────────────
+    if not args.solo_procesar:
+        logger.info("Paso 0/3 — Verificando conectividad VPN")
+        from src.utils.vpn_check import asegurar_vpn
 
+        if not asegurar_vpn():
+            logger.error("Abortando: VPN no disponible.")
+            return 1
     # ── 1. Descarga ──────────────────────────────────────────────────────────
     if not args.solo_procesar:
         logger.info("Paso 1/3 — Descarga de reportes")
