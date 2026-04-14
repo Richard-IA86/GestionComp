@@ -4,18 +4,16 @@ src/procesamiento/enriquecimiento.py
 Lee los archivos Excel de input_raw/, aplica transformaciones y cruces
 de datos, y genera DataFrames enriquecidos listos para informes.
 """
-from __future__ import annotations
 
-from pathlib import Path
-from datetime import date
+from __future__ import annotations
 
 import pandas as pd
 from loguru import logger
 
 from config.settings import INPUT_RAW_DIR
 
+# ─── Carga de archivos raw ───────────────────────────────────────────────────
 
-# ─── Carga de archivos raw ────────────────────────────────────────────────────
 
 def cargar_archivos() -> dict[str, pd.DataFrame]:
     """
@@ -23,7 +21,9 @@ def cargar_archivos() -> dict[str, pd.DataFrame]:
         { "nombre_sin_extension": DataFrame }
     """
     dfs: dict[str, pd.DataFrame] = {}
-    archivos = list(INPUT_RAW_DIR.glob("*.xlsx")) + list(INPUT_RAW_DIR.glob("*.xls"))
+    archivos = list(INPUT_RAW_DIR.glob("*.xlsx")) + list(
+        INPUT_RAW_DIR.glob("*.xls")
+    )
 
     if not archivos:
         logger.warning(f"No se encontraron archivos en {INPUT_RAW_DIR}")
@@ -34,14 +34,18 @@ def cargar_archivos() -> dict[str, pd.DataFrame]:
             df = pd.read_excel(archivo, engine="openpyxl")
             clave = archivo.stem
             dfs[clave] = df
-            logger.info(f"  Cargado: {archivo.name} → {len(df)} filas, {len(df.columns)} columnas")
+            logger.info(
+                f"  Cargado: {archivo.name}"
+                f" → {len(df)} filas, {len(df.columns)} columnas"
+            )
         except Exception as exc:
             logger.error(f"  Error al leer {archivo.name}: {exc}")
 
     return dfs
 
 
-# ─── Transformaciones por reporte ─────────────────────────────────────────────
+# ─── Transformaciones por reporte ────────────────────────────────────────────
+
 
 def procesar_cuenta_corriente(df: pd.DataFrame) -> pd.DataFrame:
     """Limpia y enriquece el reporte de Cuenta Corriente."""
@@ -50,7 +54,9 @@ def procesar_cuenta_corriente(df: pd.DataFrame) -> pd.DataFrame:
     # TODO: ajustar nombres de columnas reales del archivo
     # Ejemplo: parsear fechas, normalizar importes, calcular saldo acumulado
     if "Fecha" in df.columns:
-        df["Fecha"] = pd.to_datetime(df["Fecha"], dayfirst=True, errors="coerce")
+        df["Fecha"] = pd.to_datetime(
+            df["Fecha"], dayfirst=True, errors="coerce"
+        )
 
     for col in df.select_dtypes(include="object").columns:
         df[col] = df[col].str.strip() if hasattr(df[col], "str") else df[col]
@@ -65,7 +71,9 @@ def procesar_gastos(df: pd.DataFrame) -> pd.DataFrame:
 
     # TODO: ajustar columnas reales
     if "Fecha" in df.columns:
-        df["Fecha"] = pd.to_datetime(df["Fecha"], dayfirst=True, errors="coerce")
+        df["Fecha"] = pd.to_datetime(
+            df["Fecha"], dayfirst=True, errors="coerce"
+        )
 
     logger.debug("Gastos procesados")
     return df
@@ -77,7 +85,9 @@ def procesar_ordenes_pago(df: pd.DataFrame) -> pd.DataFrame:
 
     # TODO: ajustar columnas reales
     if "Fecha" in df.columns:
-        df["Fecha"] = pd.to_datetime(df["Fecha"], dayfirst=True, errors="coerce")
+        df["Fecha"] = pd.to_datetime(
+            df["Fecha"], dayfirst=True, errors="coerce"
+        )
 
     logger.debug("Órdenes de pago procesadas")
     return df
@@ -88,13 +98,16 @@ def procesar_listado_ordenes(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
     if "Fecha" in df.columns:
-        df["Fecha"] = pd.to_datetime(df["Fecha"], dayfirst=True, errors="coerce")
+        df["Fecha"] = pd.to_datetime(
+            df["Fecha"], dayfirst=True, errors="coerce"
+        )
 
     logger.debug("Listado detallado de órdenes procesado")
     return df
 
 
-# ─── Orquestador ──────────────────────────────────────────────────────────────
+# ─── Orquestador ─────────────────────────────────────────────────────────────
+
 
 def enriquecer_datos() -> dict[str, pd.DataFrame]:
     """
@@ -117,7 +130,9 @@ def enriquecer_datos() -> dict[str, pd.DataFrame]:
             resultado["ordenes_pago"] = procesar_ordenes_pago(df)
         else:
             resultado[clave] = df
-            logger.warning(f"  Reporte sin transformación específica: '{clave}'")
+            logger.warning(
+                f"  Reporte sin transformación específica: '{clave}'"
+            )
 
     logger.success(f"Enriquecimiento completo: {list(resultado.keys())}")
     return resultado
