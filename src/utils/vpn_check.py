@@ -1,66 +1,88 @@
 """
 src/utils/vpn_check.py
 ──────────────────────
-Verifica y activa la VPN (WireGuard) antes de la descarga.
+Verifica y activa la VPN (FortiClient IPSec) antes de la descarga.
 
-Requiere passwordless sudo para wg-quick en el host:
-  echo "ALL=(ALL) NOPASSWD: /usr/bin/wg-quick" \\
-      | sudo tee /etc/sudoers.d/wg-quick
+Credenciales en .env:
+  VPN_NAME=VPN POSE IP SEC
+  VPN_USER=rrivarola
+  VPN_PASSWORD=tu_contraseña_vpn
+  VPN_TARGET_IP=10.2.1.81
 """
 
 import subprocess
+import time
+from pathlib import Path
 
 from loguru import logger
 
-from config.settings import VPN_INTERFACE, VPN_TARGET_IP
+from config.settings import VPN_NAME, VPN_PASSWORD, VPN_TARGET_IP, VPN_USER
+
+_FORTI_EXE = Path(
+    r"C:\Program Files\Fortinet\FortiClient\FortiClientConsole.exe"
+)
 
 
 def _vpn_activa() -> bool:
-    """Devuelve True si el target IP responde a ping (max 3 s)."""
+    """Devuelve True si el target IP responde a ping."""
     result = subprocess.run(
-        ["ping", "-c", "1", "-W", "3", VPN_TARGET_IP],
+        ["ping", "-n", "1", "-w", "3000", VPN_TARGET_IP],
         capture_output=True,
-        timeout=5,
+        timeout=10,
     )
     return result.returncode == 0
 
 
 def _levantar_vpn() -> bool:
-    """Intenta levantar la interfaz WireGuard con wg-quick."""
-    logger.info(f"Levantando VPN: wg-quick up {VPN_INTERFACE}")
+    """Intenta conectar la VPN con FortiClientConsole."""
+    if not _FORTI_EXE.exists():
+        logger.error(
+            f"FortiClientConsole no encontrado: {_FORTI_EXE}"
+        )
+        return False
+    logger.info(f"Conectando VPN '{VPN_NAME}' (usuario: {VPN_USER})")
     try:
         result = subprocess.run(
-            ["sudo", "wg-quick", "up", VPN_INTERFACE],
+            [
+                str(_FORTI_EXE),
+                "-vpnconnect", VPN_NAME,
+                "-vpnuser", VPN_USER,
+                "-vpnpassword", VPN_PASSWORD,
+            ],
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=60,
         )
     except subprocess.TimeoutExpired:
-        logger.error("wg-quick tardó más de 30 s — abortado.")
+        logger.error("FortiClient tardó más de 60 s — abortado.")
         return False
     if result.returncode != 0:
         logger.error(
-            f"wg-quick falló (rc={result.returncode}): "
+            f"FortiClient falló (rc={result.returncode}): "
             f"{result.stderr.strip()}"
         )
         return False
+    # Esperar a que el túnel quede completamente establecido
+    time.sleep(5)
     return True
 
 
 def asegurar_vpn() -> bool:
     """
-    Verifica VPN activa; si no, intenta activarla con wg-quick.
+    Verifica VPN activa; si no, intenta conectar con FortiClient.
     Retorna True si la VPN queda activa al final.
     """
     if _vpn_activa():
         logger.debug(f"VPN activa — {VPN_TARGET_IP} alcanzable.")
         return True
-    logger.warning(f"VPN inactiva. Intentando wg-quick up {VPN_INTERFACE}...")
+    logger.warning(
+        f"VPN inactiva. Intentando conectar '{VPN_NAME}'..."
+    )
     if _levantar_vpn() and _vpn_activa():
         logger.success("VPN activada correctamente.")
         return True
     logger.error(
         "No se pudo establecer VPN. "
-        f"Activar manualmente: sudo wg-quick up {VPN_INTERFACE}"
+        "Conectar manualmente con FortiClient."
     )
     return False
