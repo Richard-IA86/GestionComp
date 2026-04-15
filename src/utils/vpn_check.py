@@ -36,18 +36,19 @@ def _vpn_activa() -> bool:
 def _levantar_vpn() -> bool:
     """Intenta conectar la VPN con FortiClientConsole."""
     if not _FORTI_EXE.exists():
-        logger.error(
-            f"FortiClientConsole no encontrado: {_FORTI_EXE}"
-        )
+        logger.error(f"FortiClientConsole no encontrado: {_FORTI_EXE}")
         return False
     logger.info(f"Conectando VPN '{VPN_NAME}' (usuario: {VPN_USER})")
     try:
         result = subprocess.run(
             [
                 str(_FORTI_EXE),
-                "-vpnconnect", VPN_NAME,
-                "-vpnuser", VPN_USER,
-                "-vpnpassword", VPN_PASSWORD,
+                "-vpnconnect",
+                VPN_NAME,
+                "-vpnuser",
+                VPN_USER,
+                "-vpnpassword",
+                VPN_PASSWORD,
             ],
             capture_output=True,
             text=True,
@@ -75,14 +76,11 @@ def asegurar_vpn() -> bool:
     if _vpn_activa():
         logger.debug(f"VPN activa — {VPN_TARGET_IP} alcanzable.")
         return True
-    logger.warning(
-        f"VPN inactiva. Intentando conectar '{VPN_NAME}'..."
-    )
+    logger.warning(f"VPN inactiva. Intentando conectar '{VPN_NAME}'...")
     if _levantar_vpn() and _vpn_activa():
         logger.success("VPN activada correctamente.")
         return True
     logger.error(
-        "No se pudo establecer VPN. "
-        "Conectar manualmente con FortiClient."
+        "No se pudo establecer VPN. " "Conectar manualmente con FortiClient."
     )
     return False

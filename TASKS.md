@@ -8,7 +8,7 @@
 
 ### Pendiente — Infraestructura
 - [ ] Configurar tarea programada en Windows (Programador de Tareas) para `ejecutar_diario.ps1`
-- [ ] Actualizar `scripts/ejecutar_diario.ps1`: eliminar bloque de ping VPN redundante (lo maneja `main.py` paso 0/4)
+- [x] Actualizar `scripts/ejecutar_diario.ps1`: eliminar bloque de ping VPN redundante (lo maneja `main.py` paso 0/4)
 - [ ] Definir política de retención de archivos en `output/reportes/` y `logs/`
 
 ### Pendiente — Funcionalidad
@@ -28,6 +28,14 @@
 ---
 
 ## Log de trabajo
+
+### 2026-04-15
+- **Inicio de jornada**: QA diario completo (black + flake8 + mypy + pytest)
+- black reformateó `src/utils/vpn_check.py` (1 archivo); resto sin cambios
+- flake8: 0 errores | mypy: 0 errores en 22 archivos | pytest: 36/36 passed
+- Fix `.gitignore`: agregados `.mypy_cache/` y `.pytest_cache/` que faltaban
+- Fix `scripts/ejecutar_diario.ps1`: eliminado bloque de ping VPN redundante (tarea pendiente completada)
+- `src/reportes/generador.py` y `src/reglas_negocio/reglas.py`: pendientes de lógica real (sin cambios)
 
 ### 2026-04-14
 - **Inicio de jornada**: análisis de ramas remotas (`qa/onboarding-pipeline`, `copilot/download-ejection-reports`)

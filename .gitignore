@@ -46,6 +46,10 @@ desktop.ini
 playwright-report/
 test-results/
 
+# ─── Caché de herramientas QA ────────────────
+.mypy_cache/
+.pytest_cache/
+
 # ─── Scripts temporales (protocolo QA) ───────
 _temp_*.py
 _temp_*.sh

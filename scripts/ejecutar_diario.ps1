@@ -24,18 +24,7 @@ if (-not (Test-Path $PYTHON)) {
     exit 1
 }
 
-# Verificar conectividad VPN (ping al servidor)
-Write-Host "[VPN] Verificando conectividad con 10.2.1.81..." -ForegroundColor Yellow
-$ping = Test-Connection -ComputerName "10.2.1.81" -Count 1 -Quiet -ErrorAction SilentlyContinue
-if (-not $ping) {
-    $msg = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') | ERROR | No hay conectividad con 10.2.1.81. ¿VPN activa?"
-    Add-Content $LOG_RUN $msg
-    Write-Error "Sin conexión al servidor. Verificá que la VPN esté conectada."
-    exit 1
-}
-Write-Host "       Conectividad OK." -ForegroundColor Green
-
-# Ejecutar el proceso principal
+# Ejecutar el proceso principal (incluye verificación/activación de VPN en paso 0/4)
 Write-Host "[RUN]  Iniciando proceso de compensaciones..." -ForegroundColor Cyan
 & $PYTHON main.py 2>&1 | Tee-Object -FilePath $LOG_RUN -Append
 
