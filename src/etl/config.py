@@ -10,16 +10,15 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Cargar variables desde archivo .env (si existe)
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parents[2]
-DATA_DIR = BASE_DIR / "data"
-REPORTES_DIR = BASE_DIR / "reportes"
+DATA_DIR = BASE_DIR / "output" / "reportes"
+REPORTES_DIR = BASE_DIR / "output" / "reportes"
+
+# Cargar variables desde archivo .env (si existe)
+load_dotenv(BASE_DIR / ".env")
 
 # Crear directorios si no existen
-DATA_DIR.mkdir(exist_ok=True)
-REPORTES_DIR.mkdir(exist_ok=True)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @dataclass
