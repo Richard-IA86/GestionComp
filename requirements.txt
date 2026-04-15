@@ -16,3 +16,11 @@ python-dotenv>=1.0.1
 requests>=2.32.3
 schedule>=1.2.2
 loguru>=0.7.2
+
+# --- Base de datos (módulo ETL) ---
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# --- Testing ---
+pytest>=7.4.0
+pytest-mock>=3.12.0
