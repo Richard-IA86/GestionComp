@@ -1,0 +1,35 @@
+{
+    "auditoria_qa": [],
+    "desarrollo_local": {
+        "fecha_actualizacion": "2026-04-15",
+        "punto_de_partida_manana": "Onboarding pipeline en curso — rama qa/onboarding-pipeline sin PR",
+        "tareas_pendientes": [
+            "Abrir PR: qa/onboarding-pipeline → main",
+            "Integrar tests en pipeline QA (black/flake8/mypy/pytest)",
+            "Verificar vpn_check.py con WireGuard activo"
+        ],
+        "tareas_completadas": [
+            "feat(vpn): vpn_check.py — detección WireGuard",
+            "feat(scraper): refactor scraper.py",
+            "feat(enriquecimiento): enriquecimiento.py",
+            "feat(generador): generador.py",
+            "test(smoke): test_smoke.py inicial"
+        ]
+    },
+    "jornada": {
+        "fin": {
+            "fecha": "2026-04-15",
+            "tareas_completadas": [
+                "Onboarding repo: estado_proyecto.json creado",
+                "Protocolo de jornada activado"
+            ],
+            "tareas_pendientes_manana": [
+                "Abrir PR: qa/onboarding-pipeline → main",
+                "Integrar gestion_comp en pipeline run_audit.sh",
+                "Verificar vpn_check.py con WireGuard activo"
+            ],
+            "notas_qa": "Repo nuevo — onboarding en curso. Sin pipeline QA aún.",
+            "estado_pipeline": "PENDIENTE"
+        }
+    }
+}
