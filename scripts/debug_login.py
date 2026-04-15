@@ -5,8 +5,9 @@ from playwright.sync_api import sync_playwright
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
-APP_USUARIO  = os.getenv("APP_USUARIO", "")
+APP_USUARIO = os.getenv("APP_USUARIO", "")
 APP_PASSWORD = os.getenv("APP_PASSWORD", "")
+
 
 def test_login():
     with sync_playwright() as pw:
@@ -18,32 +19,43 @@ def test_login():
         )
         context = browser.new_context(
             accept_downloads=True,
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-            viewport={"width": 1366, "height": 768}
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",  # noqa: E501
+            viewport={"width": 1366, "height": 768},
         )
-        context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        context.add_init_script(
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"  # noqa: E501
+        )
         page = context.new_page()
 
-        # ── Monitoreo completo de red (todo, desde el inicio) ─────────────────
+        # ── Monitoreo completo de red (todo, desde el inicio) ────────────────
         def on_request(req):
             if req.resource_type in ("xhr", "fetch"):
                 print(f"  --> AJAX [{req.method}] {req.url}")
-                if any(x in req.url for x in ["SetBase", "GetBase", "TablaGenerica"]):
+                if any(
+                    x in req.url
+                    for x in ["SetBase", "GetBase", "TablaGenerica"]
+                ):
                     try:
                         body = req.post_data
                         if body:
                             print(f"      >>> POST DATA: {body[:400]}")
-                    except:
+                    except Exception:
                         pass
 
         def on_response(res):
             if res.request.resource_type in ("xhr", "fetch"):
-                # Capturamos los endpoints clave: bases disponibles, selección de base y tabla
-                if any(x in res.url for x in ["TablaGenerica", "GetBase", "SetBase"]):
+                # Capturamos los endpoints clave: bases disponibles,
+                # selección de base y tabla
+                if any(
+                    x in res.url
+                    for x in ["TablaGenerica", "GetBase", "SetBase"]
+                ):
                     try:
                         body = res.text()
                         print(f"  <-- AJAX [{res.status}] {res.url}")
-                        print(f"      >>> BODY ({len(body)} chars): {body[:800]}")
+                        print(
+                            f"      >>> BODY ({len(body)} chars): {body[:800]}"
+                        )
                     except Exception as e:
                         print(f"      >>> No se pudo leer el body: {e}")
 
@@ -58,16 +70,19 @@ def test_login():
         page.goto("http://10.2.1.81/")
 
         print(">>> Ingresando credenciales...")
-        page.fill('#userName', APP_USUARIO)
-        page.fill('#Password', APP_PASSWORD)
-        page.click('#botonLogin')
+        page.fill("#userName", APP_USUARIO)
+        page.fill("#Password", APP_PASSWORD)
+        page.click("#botonLogin")
         # Esperamos que se ejecuten todos los AJAX post-login
         page.wait_for_load_state("networkidle")
         page.wait_for_timeout(5000)
 
-        # ── Buscar el dropdown de empresa en la UI ─────────────────────────────
+        # ── Buscar el dropdown de empresa en la UI ───────────────────────────
         print()
-        print(">>> Buscando select/inputs con nombre 'base' o 'empresa' en la página...")
+        print(
+            ">>> Buscando select/inputs con 'base'"
+            " o 'empresa' en la página..."
+        )
         selects = page.evaluate("""() => {
             const results = [];
             document.querySelectorAll('select, input[list]').forEach(el => {
@@ -82,13 +97,18 @@ def test_login():
             return results;
         }""")
         for s in selects:
-            print(f"  [{s['tag']}] id={s['id']!r} name={s['name']!r} class={s['className']!r}")
+            print(
+                f"  [{s['tag']}]"
+                f" id={s['id']!r} name={s['name']!r}"
+                f" class={s['className']!r}"
+            )
             print(f"    HTML: {s['outerHTML'][:300]}")
 
         print()
         print(">>> Listo. Revisando resultados arriba...")
         browser.close()
         print("Prueba finalizada.")
+
 
 if __name__ == "__main__":
     test_login()

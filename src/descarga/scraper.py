@@ -5,9 +5,9 @@ Automatiza el login y la descarga de reportes desde el sistema web
 usando Playwright.  Se conecta al sistema, navega a cada reporte,
 aplica los filtros necesarios y guarda los archivos en input_raw/.
 """
+
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 from datetime import date
 
@@ -26,39 +26,42 @@ from config.settings import (
 
 import random
 
+
 def _espera_humana(page: Page, min_ms: int = 1000, max_ms: int = 3000) -> None:
     """Añade una pausa aleatoria para simular comportamiento humano."""
     page.wait_for_timeout(random.randint(min_ms, max_ms))
 
-# ─── Login ────────────────────────────────────────────────────────────────────
+
+# ─── Login ───────────────────────────────────────────────────────────────────
+
 
 def _hacer_login(page: Page) -> None:
     """Navega al login y autentica con las credenciales."""
     logger.info(f"Navegando a {APP_URL}")
     page.goto(APP_URL, timeout=TIMEOUT_MS)
-    
+
     _espera_humana(page, 2000, 4000)
 
     # Escribimos letra por letra para simular a una persona (delay)
-    page.locator('#userName').press_sequentially(APP_USUARIO, delay=150)
+    page.locator("#userName").press_sequentially(APP_USUARIO, delay=150)
     _espera_humana(page, 1000, 2000)
 
-    page.locator('#Password').press_sequentially(APP_PASSWORD, delay=150)
+    page.locator("#Password").press_sequentially(APP_PASSWORD, delay=150)
     _espera_humana(page, 1000, 2000)
-    
+
     # Clic en el botón LOGIN usando su ID
-    page.click('#botonLogin')
+    page.click("#botonLogin")
 
     # Esperar a que cargue algún elemento post-login (ajustar selector)
     page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
     _espera_humana(page, 3000, 5000)
-    
-    # ── Seleccionar empresa "Pose - 30-70910712-3" (id=1) ─────────────────────
+
+    # ── Seleccionar empresa "Pose - 30-70910712-3" (id=1) ────────────────────
     # Interactuamos con el dropdown #bdDropdown de la navbar para que el JS
     # nativo de la página llame a SetBase correctamente (con CSRF y sesión).
     logger.info("Seleccionando empresa 'Pose - 30-70910712-3'...")
-    page.wait_for_selector('#bdDropdown', state="visible", timeout=TIMEOUT_MS)
-    page.select_option('#bdDropdown', value="1")
+    page.wait_for_selector("#bdDropdown", state="visible", timeout=TIMEOUT_MS)
+    page.select_option("#bdDropdown", value="1")
 
     # Esperar a que el servidor procese SetBase y recargue el menú
     page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
@@ -67,6 +70,7 @@ def _hacer_login(page: Page) -> None:
 
 
 # ─── Descarga de un reporte individual ───────────────────────────────────────
+
 
 def _descargar_archivo(
     page: Page,
@@ -85,33 +89,38 @@ def _descargar_archivo(
     _espera_humana(page, 1500, 2500)
 
     # ── Clic en Actualizar (fechas por defecto, no se modifican) ─────────────
-    # Algunos reportes tienen #botonActualizar; otros cargan automáticamente al navegar.
-    if page.locator('#botonActualizar').count() > 0:
+    # Algunos reportes tienen #botonActualizar;
+    # otros cargan automáticamente al navegar.
+    if page.locator("#botonActualizar").count() > 0:
         page.evaluate("document.getElementById('botonActualizar').click()")
         logger.info("  → Actualizando tabla con fechas por defecto...")
     else:
         logger.info("  → Tabla carga automáticamente (sin botonActualizar)...")
 
-    # ── Esperar a que DataTables dibuje la tabla y aparezca el botón Excel ────
+    # ── Esperar a que DataTables dibuje la tabla y aparezca el botón Excel ───
     try:
-        page.wait_for_selector('button.buttons-excel', state="attached", timeout=60000)
+        page.wait_for_selector(
+            "button.buttons-excel", state="attached", timeout=60000
+        )
     except Exception:
         # Segundo intento: a veces DataTables tarda un poco más
         page.wait_for_timeout(5000)
-        page.wait_for_selector('button.buttons-excel', state="attached", timeout=30000)
+        page.wait_for_selector(
+            "button.buttons-excel", state="attached", timeout=30000
+        )
 
     # ── Mostrar TODOS los registros antes de exportar ────────────────────────
-    # DataTables solo exporta los registros visibles; hay que cambiar el selector
-    # "Mostrar N registros" a "All" (value="-1") para que el Excel contenga todo.
+    # DataTables exporta solo los registros visibles; cambiar el
+    # selector a "All" (value="-1") para que el Excel contenga todo.
     page.select_option('select[name="Tabla_length"]', value="-1")
     logger.info("  → Selector de registros puesto en 'All'...")
     page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
     _espera_humana(page, 1000, 2000)
     logger.info("  → Iniciando descarga Excel...")
 
-    # ── Trigger descarga ──────────────────────────────────────────────────────
+    # ── Trigger descarga ─────────────────────────────────────────────────────
     with page.expect_download(timeout=TIMEOUT_MS) as dl_info:
-        page.click('button.buttons-excel', force=True)
+        page.click("button.buttons-excel", force=True)
 
     download: Download = dl_info.value
     destino = RUTA_DESCARGA / nombre_destino
@@ -122,13 +131,14 @@ def _descargar_archivo(
 
 # ─── Descarga especial: Cuenta Corriente Acreedores ──────────────────────────
 
+
 def _descargar_cuenta_corriente(page: Page, nombre_destino: str) -> Path:
     """
     Descarga el reporte de Cuenta Corriente de Construya al Costo SRL.
     Flujo especial: destildar Pendiente, mostrar Todo, setear rango de fechas
     (inicio fijo 01/04/2026, fin = hoy) y exportar Excel.
     """
-    URL = "http://10.2.1.81/CuentaCorriente/AcreedoresPorTransacciones?IdProveedor=43292"
+    URL = "http://10.2.1.81/CuentaCorriente/AcreedoresPorTransacciones?IdProveedor=43292"  # noqa: E501
     fecha_inicio = "01/04/2026"
     fecha_fin = date.today().strftime("%d/%m/%Y")
     rango_fecha = f"{fecha_inicio} - {fecha_fin}"
@@ -139,7 +149,7 @@ def _descargar_cuenta_corriente(page: Page, nombre_destino: str) -> Path:
     _espera_humana(page, 1500, 2500)
 
     # 1. Destildar "Pendiente" (primer checkbox)
-    chk_pendiente = page.locator('#Pendiente_chk').first
+    chk_pendiente = page.locator("#Pendiente_chk").first
     if chk_pendiente.is_checked():
         chk_pendiente.uncheck()
         logger.info("  → Destildado: Pendiente_chk")
@@ -152,7 +162,7 @@ def _descargar_cuenta_corriente(page: Page, nombre_destino: str) -> Path:
     _espera_humana(page, 500, 1000)
 
     # 3. Tildar "Todo"
-    chk_todo = page.locator('#Todo_chk')
+    chk_todo = page.locator("#Todo_chk")
     if not chk_todo.is_checked():
         chk_todo.check()
         logger.info("  → Tildado: Todo_chk")
@@ -160,14 +170,14 @@ def _descargar_cuenta_corriente(page: Page, nombre_destino: str) -> Path:
         _espera_humana(page, 500, 1000)
 
     # 4. Setear rango de fecha (inicio fijo 01/04/2026, fin = hoy)
-    page.fill('#filtroFecha', rango_fecha)
+    page.fill("#filtroFecha", rango_fecha)
     logger.info(f"  → Fecha seteada: {rango_fecha}")
-    page.keyboard.press('Enter')
+    page.keyboard.press("Enter")
     page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
     _espera_humana(page, 1000, 2000)
 
     # 5. Destildar Pendiente nuevamente (segundo checkbox del detalle)
-    chk_pendiente2 = page.locator('#Pendiente_chk').last
+    chk_pendiente2 = page.locator("#Pendiente_chk").last
     if chk_pendiente2.is_checked():
         chk_pendiente2.uncheck()
         logger.info("  → Destildado: Pendiente_chk (detalle)")
@@ -175,12 +185,14 @@ def _descargar_cuenta_corriente(page: Page, nombre_destino: str) -> Path:
         _espera_humana(page, 500, 1000)
 
     # 6. Esperar botón Excel y exportar
-    page.wait_for_selector('button.buttons-excel', state="attached", timeout=60000)
+    page.wait_for_selector(
+        "button.buttons-excel", state="attached", timeout=60000
+    )
     _espera_humana(page, 500, 1000)
     logger.info("  → Iniciando descarga Excel...")
 
     with page.expect_download(timeout=TIMEOUT_MS) as dl_info:
-        page.click('button.buttons-excel', force=True)
+        page.click("button.buttons-excel", force=True)
 
     download: Download = dl_info.value
     destino = RUTA_DESCARGA / nombre_destino
@@ -189,24 +201,26 @@ def _descargar_cuenta_corriente(page: Page, nombre_destino: str) -> Path:
     return destino
 
 
-# ─── Orquestador principal ────────────────────────────────────────────────────
+# ─── Orquestador principal ───────────────────────────────────────────────────
+
 
 def descargar_todos_los_reportes(
     fecha_desde: date | None = None,
     fecha_hasta: date | None = None,
 ) -> list[Path]:
     """
-    Abre el navegador, hace login, selecciona la empresa y descarga todos los reportes.
+    Abre el navegador, hace login, selecciona la empresa
+    y descarga todos los reportes.
     Las fechas se dejan por defecto (el sistema las pre-carga automáticamente).
     """
     if fecha_hasta is None:
         fecha_hasta = date.today()
 
-    # ── Definir reportes a descargar ──────────────────────────────────────────
+    # ── Definir reportes a descargar ─────────────────────────────────────────
     # Cada entrada: (url_relativa_al_login, nombre_archivo_destino)
     REPORTES = [
         (
-            "http://10.2.1.81/Consulta/ProveedoresListadoOrdenesPagoDetallado3",
+            "http://10.2.1.81/Consulta/ProveedoresListadoOrdenesPagoDetallado3",  # noqa: E501
             "Listado Detallado de Órdenes de Pago - Pronto.xlsx",
         ),
         (
@@ -231,13 +245,15 @@ def descargar_todos_los_reportes(
         )
         context = browser.new_context(
             accept_downloads=True,
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-            viewport={"width": 1366, "height": 768}
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",  # noqa: E501
+            viewport={"width": 1366, "height": 768},
         )
-        
-        # Ocultar la propiedad webdriver mediante un script en cada página nueva
-        context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-        
+
+        # Ocultar webdriver mediante un script en cada página nueva
+        context.add_init_script(
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"  # noqa: E501
+        )
+
         page = context.new_page()
 
         try:
@@ -254,7 +270,7 @@ def descargar_todos_los_reportes(
             # Cuenta corriente: flujo especial con filtros propios
             ruta_cc = _descargar_cuenta_corriente(
                 page,
-                nombre_destino="Cuenta corriente CONSTRUYA AL COSTO SRL - Pronto.xlsx",
+                nombre_destino="Cuenta corriente CONSTRUYA AL COSTO SRL - Pronto.xlsx",  # noqa: E501
             )
             archivos_descargados.append(ruta_cc)
 

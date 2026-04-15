@@ -45,3 +45,8 @@ desktop.ini
 # ─── Playwright ───────────────────────────────
 playwright-report/
 test-results/
+
+# ─── Scripts temporales (protocolo QA) ───────
+_temp_*.py
+_temp_*.sh
+
