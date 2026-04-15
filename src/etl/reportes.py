@@ -9,6 +9,7 @@ Genera y descarga los reportes de gestión en formatos estándar
   - DistribucionCentroCosto: distribución por centro de costo.
   - ReporteCompleto: descarga consolidada con todas las vistas.
 """
+
 import logging
 from datetime import date, datetime
 from pathlib import Path
@@ -32,7 +33,9 @@ class GeneradorReportes:
     # Helpers internos
     # ------------------------------------------------------------------
 
-    def _nombre_archivo(self, prefijo: str, fecha: Optional[str] = None) -> str:
+    def _nombre_archivo(
+        self, prefijo: str, fecha: Optional[str] = None
+    ) -> str:
         fecha_str = fecha or date.today().strftime("%Y%m%d")
         return f"{prefijo}_{fecha_str}.{self.config.reportes.formato}"
 
@@ -76,7 +79,9 @@ class GeneradorReportes:
             .agg(total="sum", promedio="mean", cantidad="count")
             .reset_index()
         )
-        resumen["total_general"] = resumen.groupby("fecha")["total"].transform("sum")
+        resumen["total_general"] = resumen.groupby("fecha")["total"].transform(
+            "sum"
+        )
         resumen["participacion_pct"] = (
             resumen["total"] / resumen["total_general"] * 100
         ).round(4)
@@ -95,7 +100,9 @@ class GeneradorReportes:
         al umbral definido en las reglas de negocio.
         """
         if "alerta" not in df.columns:
-            logger.warning("El DataFrame no contiene columna 'alerta'. Reporte vacío.")
+            logger.warning(
+                "El DataFrame no contiene columna 'alerta'. Reporte vacío."
+            )
             alertas = pd.DataFrame()
         else:
             alertas = df[df["alerta"]].copy()
@@ -124,7 +131,9 @@ class GeneradorReportes:
         )
         if "participacion_pct" in df.columns:
             dist = dist.merge(
-                df[disponibles + ["participacion_pct", "categoria"]].drop_duplicates(),
+                df[
+                    disponibles + ["participacion_pct", "categoria"]
+                ].drop_duplicates(),
                 on=disponibles,
                 how="left",
             )
@@ -136,7 +145,10 @@ class GeneradorReportes:
         return self._guardar_excel({"Distribución CC": dist}, nombre)
 
     def reporte_completo(
-        self, df: pd.DataFrame, df_invalidos: pd.DataFrame, fecha: Optional[str] = None
+        self,
+        df: pd.DataFrame,
+        df_invalidos: pd.DataFrame,
+        fecha: Optional[str] = None,
     ) -> Path:
         """
         Descarga consolidada con todas las vistas del negocio en un
@@ -146,19 +158,33 @@ class GeneradorReportes:
         disponibles = [c for c in columnas_grupo_resumen if c in df.columns]
 
         resumen = (
-            df.groupby(disponibles)["valor_num"]
-            .agg(total="sum", promedio="mean", cantidad="count")
-            .reset_index()
-        ) if disponibles else pd.DataFrame()
+            (
+                df.groupby(disponibles)["valor_num"]
+                .agg(total="sum", promedio="mean", cantidad="count")
+                .reset_index()
+            )
+            if disponibles
+            else pd.DataFrame()
+        )
 
-        alertas = df[df["alerta"]].copy() if "alerta" in df.columns else pd.DataFrame()
+        alertas = (
+            df[df["alerta"]].copy()
+            if "alerta" in df.columns
+            else pd.DataFrame()
+        )
 
-        dist_cc_cols = [c for c in ["fecha", "centro_costo", "variable"] if c in df.columns]
+        dist_cc_cols = [
+            c for c in ["fecha", "centro_costo", "variable"] if c in df.columns
+        ]
         dist_cc = (
-            df.groupby(dist_cc_cols)["valor_num"]
-            .agg(total="sum")
-            .reset_index()
-        ) if dist_cc_cols else pd.DataFrame()
+            (
+                df.groupby(dist_cc_cols)["valor_num"]
+                .agg(total="sum")
+                .reset_index()
+            )
+            if dist_cc_cols
+            else pd.DataFrame()
+        )
 
         hojas = {
             "Resumen Diario": resumen,

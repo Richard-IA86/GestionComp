@@ -12,6 +12,7 @@ Principios de diseño:
   - Los nombres describen la intención del negocio, no la implementación.
   - Todas las funciones están documentadas y son fácilmente verificables.
 """
+
 from __future__ import annotations
 
 import logging
@@ -51,9 +52,11 @@ def validar_campos_obligatorios(df: pd.DataFrame) -> pd.DataFrame:
     Agrega la columna 'error_campos' con los nombres de campos obligatorios
     que están vacíos o nulos en cada fila.
     """
+
     def _faltantes(fila: pd.Series) -> str:
         return ", ".join(
-            campo for campo in CAMPOS_OBLIGATORIOS
+            campo
+            for campo in CAMPOS_OBLIGATORIOS
             if campo in fila.index and pd.isna(fila[campo])
         )
 
@@ -109,10 +112,9 @@ def calcular_distribucion_diaria(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["valor_num"] = pd.to_numeric(df["valor"], errors="coerce").fillna(0)
 
-    total_por_fecha_variable = (
-        df.groupby(["fecha", "variable"])["valor_num"]
-        .transform("sum")
-    )
+    total_por_fecha_variable = df.groupby(["fecha", "variable"])[
+        "valor_num"
+    ].transform("sum")
     df["participacion_pct"] = (
         df["valor_num"].div(total_por_fecha_variable.replace(0, pd.NA)) * 100
     ).round(4)
@@ -127,11 +129,17 @@ def calcular_variacion_respecto_anterior(df: pd.DataFrame) -> pd.DataFrame:
     Precondición: el DataFrame debe estar ordenado por fecha.
     """
     df = df.copy()
-    df["valor_num"] = pd.to_numeric(df.get("valor_num", df["valor"]), errors="coerce")
+    df["valor_num"] = pd.to_numeric(
+        df.get("valor_num", df["valor"]), errors="coerce"
+    )
     df = df.sort_values(["variable", "centro_costo", "fecha"])
-    df["valor_anterior"] = df.groupby(["variable", "centro_costo"])["valor_num"].shift(1)
+    df["valor_anterior"] = df.groupby(["variable", "centro_costo"])[
+        "valor_num"
+    ].shift(1)
     df["variacion_pct"] = (
-        (df["valor_num"] - df["valor_anterior"]) / df["valor_anterior"].abs() * 100
+        (df["valor_num"] - df["valor_anterior"])
+        / df["valor_anterior"].abs()
+        * 100
     ).round(4)
     return df
 
@@ -168,12 +176,6 @@ def asignar_categoria_distribucion(df: pd.DataFrame) -> pd.DataFrame:
     if "participacion_pct" not in df.columns:
         df = calcular_distribucion_diaria(df)
 
-    condiciones = [
-        df["participacion_pct"] >= 70,
-        df["participacion_pct"] >= 30,
-        df["participacion_pct"] >= 10,
-    ]
-    categorias = ["A", "B", "C"]
     df["categoria"] = pd.Categorical(
         pd.Series(
             pd.cut(

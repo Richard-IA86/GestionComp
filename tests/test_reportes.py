@@ -1,5 +1,4 @@
 """Pruebas unitarias del módulo de Reportes."""
-from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -25,7 +24,9 @@ def generador(config):
 def df_procesado():
     return pd.DataFrame(
         {
-            "fecha": pd.to_datetime(["2024-01-01", "2024-01-01", "2024-01-02"]),
+            "fecha": pd.to_datetime(
+                ["2024-01-01", "2024-01-01", "2024-01-02"]
+            ),
             "variable": ["VAR_A", "VAR_B", "VAR_A"],
             "valor_num": [100.0, 200.0, 150.0],
             "centro_costo": ["CC01", "CC02", "CC01"],
@@ -55,17 +56,23 @@ def test_alertas_diarias_sin_columna_alerta(generador, tmp_path):
     assert ruta.exists()
 
 
-def test_distribucion_centro_costo_genera_archivo(generador, df_procesado, tmp_path):
+def test_distribucion_centro_costo_genera_archivo(
+    generador, df_procesado, tmp_path
+):
     ruta = generador.distribucion_centro_costo(df_procesado, fecha="20240101")
     assert ruta.exists()
     assert "distribucion_cc" in ruta.name
 
 
-def test_reporte_completo_genera_excel_con_hojas(generador, df_procesado, tmp_path):
+def test_reporte_completo_genera_excel_con_hojas(
+    generador, df_procesado, tmp_path
+):
     df_invalidos = pd.DataFrame(
         {"id_registro": ["99"], "motivo_rechazo": ["campo faltante"]}
     )
-    ruta = generador.reporte_completo(df_procesado, df_invalidos, fecha="20240101")
+    ruta = generador.reporte_completo(
+        df_procesado, df_invalidos, fecha="20240101"
+    )
     assert ruta.exists()
     assert "reporte_completo" in ruta.name
 

@@ -1,4 +1,5 @@
 """Pruebas unitarias del módulo de Transformación y Reglas de Negocio."""
+
 import pandas as pd
 import pytest
 
@@ -11,7 +12,6 @@ from src.reglas_negocio.reglas import (
     validar_campos_obligatorios,
     validar_rango_valor,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -156,9 +156,12 @@ def test_calcular_distribucion_diaria_suma_100(df_valido):
     resultado = calcular_distribucion_diaria(df)
     # Para VAR_A en 2024-01-01: valores 100 y 300 → total 400
     fila_var_a_cc01 = resultado[
-        (resultado["variable"] == "VAR_A") & (resultado["centro_costo"] == "CC01")
+        (resultado["variable"] == "VAR_A")
+        & (resultado["centro_costo"] == "CC01")
     ]
-    assert fila_var_a_cc01["participacion_pct"].iloc[0] == pytest.approx(25.0, rel=1e-3)
+    assert fila_var_a_cc01["participacion_pct"].iloc[0] == pytest.approx(
+        25.0, rel=1e-3
+    )
 
 
 def test_calcular_variacion_genera_columna(df_valido):

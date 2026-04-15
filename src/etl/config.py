@@ -3,6 +3,7 @@ Configuración centralizada del pipeline ETL.
 Lee variables de entorno (.env) y expone parámetros de conexión,
 rutas de archivos y ajustes generales del proceso.
 """
+
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -24,11 +25,22 @@ REPORTES_DIR.mkdir(exist_ok=True)
 @dataclass
 class ConfigDB:
     """Parámetros de conexión a la base de datos origen."""
-    host: str = field(default_factory=lambda: os.getenv("DB_HOST", "localhost"))
-    puerto: int = field(default_factory=lambda: int(os.getenv("DB_PORT", "5432")))
-    nombre: str = field(default_factory=lambda: os.getenv("DB_NAME", "gestion_comp"))
-    usuario: str = field(default_factory=lambda: os.getenv("DB_USER", "etl_user"))
-    contrasena: str = field(default_factory=lambda: os.getenv("DB_PASSWORD", ""))
+
+    host: str = field(
+        default_factory=lambda: os.getenv("DB_HOST", "localhost")
+    )
+    puerto: int = field(
+        default_factory=lambda: int(os.getenv("DB_PORT", "5432"))
+    )
+    nombre: str = field(
+        default_factory=lambda: os.getenv("DB_NAME", "gestion_comp")
+    )
+    usuario: str = field(
+        default_factory=lambda: os.getenv("DB_USER", "etl_user")
+    )
+    contrasena: str = field(
+        default_factory=lambda: os.getenv("DB_PASSWORD", "")
+    )
 
     @property
     def url(self) -> str:
@@ -41,17 +53,25 @@ class ConfigDB:
 @dataclass
 class ConfigReportes:
     """Configuración para la descarga y generación de reportes."""
+
     directorio_salida: Path = field(default_factory=lambda: REPORTES_DIR)
-    formato: str = field(default_factory=lambda: os.getenv("REPORTE_FORMATO", "xlsx"))
-    api_url: str = field(
-        default_factory=lambda: os.getenv("API_REPORTES_URL", "http://localhost:8080/api")
+    formato: str = field(
+        default_factory=lambda: os.getenv("REPORTE_FORMATO", "xlsx")
     )
-    api_token: str = field(default_factory=lambda: os.getenv("API_REPORTES_TOKEN", ""))
+    api_url: str = field(
+        default_factory=lambda: os.getenv(
+            "API_REPORTES_URL", "http://localhost:8080/api"
+        )
+    )
+    api_token: str = field(
+        default_factory=lambda: os.getenv("API_REPORTES_TOKEN", "")
+    )
 
 
 @dataclass
 class ConfigETL:
     """Parámetros generales del pipeline ETL."""
+
     db: ConfigDB = field(default_factory=ConfigDB)
     reportes: ConfigReportes = field(default_factory=ConfigReportes)
     directorio_datos: Path = field(default_factory=lambda: DATA_DIR)

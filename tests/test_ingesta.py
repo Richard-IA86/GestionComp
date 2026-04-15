@@ -1,8 +1,6 @@
 """Pruebas unitarias del módulo de Ingesta."""
-import io
+
 import json
-import textwrap
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -30,14 +28,24 @@ def ingesta(config):
 
 
 def test_desde_csv_lee_archivo(tmp_path, ingesta):
-    contenido = "id_registro;fecha;variable;valor;unidad;centro_costo\n1;2024-01-01;VAR_A;100;USD;CC01\n"
+    contenido = (
+        "id_registro;fecha;variable;valor;unidad;centro_costo\n"
+        "1;2024-01-01;VAR_A;100;USD;CC01\n"
+    )
     ruta = tmp_path / "datos.csv"
     ruta.write_text(contenido, encoding="utf-8")
 
     df = ingesta.desde_csv(ruta)
 
     assert len(df) == 1
-    assert list(df.columns) == ["id_registro", "fecha", "variable", "valor", "unidad", "centro_costo"]
+    assert list(df.columns) == [
+        "id_registro",
+        "fecha",
+        "variable",
+        "valor",
+        "unidad",
+        "centro_costo",
+    ]
     assert df["valor"].iloc[0] == "100"
 
 
@@ -99,7 +107,10 @@ def test_desde_api_lista(ingesta):
 
 def test_desde_api_objeto_con_data(ingesta):
     respuesta_mock = MagicMock()
-    respuesta_mock.json.return_value = {"data": [{"id": "2", "valor": "400"}], "total": 1}
+    respuesta_mock.json.return_value = {
+        "data": [{"id": "2", "valor": "400"}],
+        "total": 1,
+    }
     respuesta_mock.raise_for_status = MagicMock()
 
     with patch("src.etl.ingesta.requests.get", return_value=respuesta_mock):

@@ -7,7 +7,7 @@ para la distribución diaria de variables de negocio.
 Uso desde línea de comandos:
 
     python -m src.etl.pipeline --fuente csv --archivo datos/variables.csv
-    python -m src.etl.pipeline --fuente bd --consulta "SELECT * FROM variables WHERE fecha = CURRENT_DATE"
+    python -m src.etl.pipeline --fuente bd --consulta "SELECT * FROM variables WHERE fecha = CURRENT_DATE"  # noqa: E501
     python -m src.etl.pipeline --fuente api --endpoint variables/diarias
 
 El proceso genera:
@@ -15,11 +15,11 @@ El proceso genera:
   2. Archivo de auditoría con registros rechazados.
   3. Reportes de gestión (resumen, alertas, distribución, completo).
 """
+
 import argparse
 import logging
 import sys
 from datetime import date
-from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -60,7 +60,8 @@ class Pipeline:
         endpoint: Optional[str] = None,
         hoja: str | int = 0,
     ) -> pd.DataFrame:
-        """Delega la extracción al módulo de Ingesta según la fuente indicada."""
+        """Delega la extracción al módulo de Ingesta según la fuente
+        indicada."""
         fuente = fuente.lower()
         if fuente == "csv":
             if not archivo:
@@ -82,7 +83,10 @@ class Pipeline:
             if not endpoint:
                 raise ValueError("Debe indicar --endpoint para fuente 'api'.")
             return self.ingesta.desde_api(endpoint)
-        raise ValueError(f"Fuente no soportada: '{fuente}'. Use: csv, excel, json, bd, api.")
+        raise ValueError(
+            f"Fuente no soportada: '{fuente}'."
+            " Use: csv, excel, json, bd, api."
+        )
 
     # ------------------------------------------------------------------
     # Pipeline completo
@@ -102,19 +106,21 @@ class Pipeline:
         Ejecuta el pipeline ETL completo.
 
         Parámetros:
-            fuente         – Origen de los datos: csv | excel | json | bd | api.
+            fuente         – Origen: csv | excel | json | bd | api.
             archivo        – Ruta al archivo (para fuente csv/excel/json).
             consulta       – Consulta SQL (para fuente bd).
             endpoint       – Endpoint de la API (para fuente api).
             destino        – Destino de carga: 'archivo' | 'bd'.
             tabla_destino  – Nombre de tabla cuando destino='bd'.
-            fecha          – Fecha del proceso (YYYYMMDD). Usa hoy si no se indica.
+            fecha          – Proceso (YYYYMMDD). Usa hoy si no se indica.
 
         Retorna un diccionario con estadísticas del proceso.
         """
         fecha = fecha or date.today().strftime("%Y%m%d")
         logger.info("=" * 60)
-        logger.info("INICIO PIPELINE ETL  |  fecha=%s  |  fuente=%s", fecha, fuente)
+        logger.info(
+            "INICIO PIPELINE ETL  |  fecha=%s  |  fuente=%s", fecha, fuente
+        )
         logger.info("=" * 60)
 
         # ---- EXTRACT ----
@@ -132,18 +138,24 @@ class Pipeline:
 
         # ---- LOAD ----
         logger.info("[3/4] Carga")
-        ruta_rechazos = self.carga.registrar_rechazos(df_invalidos, fecha=fecha)
+        ruta_rechazos = self.carga.registrar_rechazos(
+            df_invalidos, fecha=fecha
+        )
 
         if destino == "bd":
             n_cargados = self.carga.a_bd(df_validos, tabla=tabla_destino)
             ruta_salida = None
         else:
-            ruta_salida = self.carga.a_csv(df_validos, f"variables_{fecha}.csv")
+            ruta_salida = self.carga.a_csv(
+                df_validos, f"variables_{fecha}.csv"
+            )
             n_cargados = len(df_validos)
 
         # ---- REPORTES ----
         logger.info("[4/4] Generación de reportes")
-        ruta_reporte = self.reportes.reporte_completo(df_validos, df_invalidos, fecha=fecha)
+        ruta_reporte = self.reportes.reporte_completo(
+            df_validos, df_invalidos, fecha=fecha
+        )
 
         estadisticas = {
             "fecha": fecha,
@@ -169,9 +181,12 @@ class Pipeline:
 # Punto de entrada CLI
 # ---------------------------------------------------------------------------
 
+
 def _construir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Pipeline ETL para distribución diaria de variables de negocio."
+        description=(
+            "Pipeline ETL para distribución diaria de variables de negocio."
+        )
     )
     parser.add_argument(
         "--fuente",
@@ -179,7 +194,9 @@ def _construir_parser() -> argparse.ArgumentParser:
         choices=["csv", "excel", "json", "bd", "api"],
         help="Fuente de los datos de entrada.",
     )
-    parser.add_argument("--archivo", help="Ruta al archivo de entrada (csv/excel/json).")
+    parser.add_argument(
+        "--archivo", help="Ruta al archivo de entrada (csv/excel/json)."
+    )
     parser.add_argument("--consulta", help="Consulta SQL (fuente=bd).")
     parser.add_argument("--endpoint", help="Endpoint de la API (fuente=api).")
     parser.add_argument(
@@ -189,7 +206,9 @@ def _construir_parser() -> argparse.ArgumentParser:
         help="Destino de carga de los datos válidos.",
     )
     parser.add_argument(
-        "--tabla", default="variables_diarias", help="Tabla destino (destino=bd)."
+        "--tabla",
+        default="variables_diarias",
+        help="Tabla destino (destino=bd).",
     )
     parser.add_argument(
         "--fecha",

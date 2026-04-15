@@ -7,6 +7,7 @@ Responsabilidades:
   - Leer datos desde APIs REST externas.
   - Devolver DataFrames listos para la etapa de Transformación.
 """
+
 import logging
 from pathlib import Path
 from typing import Optional
@@ -38,12 +39,14 @@ class Ingesta:
             ruta,
             sep=self.config.separador_csv,
             encoding=self.config.encoding,
-            dtype=str,  # Leer todo como texto; la transformación normaliza tipos
+            dtype=str,  # Leer todo como texto; transformación normaliza tipos
         )
         logger.info("Registros leídos: %d", len(df))
         return df
 
-    def desde_excel(self, ruta: str | Path, hoja: str | int = 0) -> pd.DataFrame:
+    def desde_excel(
+        self, ruta: str | Path, hoja: str | int = 0
+    ) -> pd.DataFrame:
         """Lee una hoja de un archivo Excel (.xlsx / .xls)."""
         ruta = Path(ruta)
         logger.info("Ingesta Excel: %s [hoja=%s]", ruta, hoja)
@@ -75,7 +78,9 @@ class Ingesta:
         logger.info("Registros leídos: %d", len(df))
         return df
 
-    def desde_bd_tabla(self, tabla: str, schema: Optional[str] = None) -> pd.DataFrame:
+    def desde_bd_tabla(
+        self, tabla: str, schema: Optional[str] = None
+    ) -> pd.DataFrame:
         """Lee una tabla completa desde la base de datos."""
         nombre_completo = f"{schema}.{tabla}" if schema else tabla
         return self.desde_bd(f"SELECT * FROM {nombre_completo}")
@@ -95,12 +100,16 @@ class Ingesta:
         en DataFrame.  Incluye el token de autorización configurado.
         """
         url = f"{self.config.reportes.api_url}/{endpoint.lstrip('/')}"
-        _headers = {"Authorization": f"Bearer {self.config.reportes.api_token}"}
+        _headers = {
+            "Authorization": f"Bearer {self.config.reportes.api_token}"
+        }
         if headers:
             _headers.update(headers)
 
         logger.info("Ingesta API: GET %s", url)
-        respuesta = requests.get(url, params=params, headers=_headers, timeout=30)
+        respuesta = requests.get(
+            url, params=params, headers=_headers, timeout=30
+        )
         respuesta.raise_for_status()
 
         datos = respuesta.json()
