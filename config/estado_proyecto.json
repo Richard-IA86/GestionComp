@@ -1,35 +1,49 @@
 {
-    "auditoria_qa": [],
+    "auditoria_qa": [
+        {
+            "fecha": "2026-04-16",
+            "herramientas": {
+                "black": "OK",
+                "flake8": "OK",
+                "mypy": "OK",
+                "pytest": "36/36 passed"
+            },
+            "estado_pipeline": "VERDE"
+        }
+    ],
     "desarrollo_local": {
-        "fecha_actualizacion": "2026-04-15",
-        "punto_de_partida_manana": "Onboarding pipeline en curso — rama qa/onboarding-pipeline sin PR",
+        "fecha_actualizacion": "2026-04-16",
+        "punto_de_partida_manana": "Pipeline 6/6 APROBADO — gestion_comp integrado. Pendiente: vpn_check FortiClient en Asus Windows.",
         "tareas_pendientes": [
-            "Abrir PR: qa/onboarding-pipeline → main",
-            "Integrar tests en pipeline QA (black/flake8/mypy/pytest)",
-            "Verificar vpn_check.py con WireGuard activo"
+            "Verificar vpn_check.py (FortiClient) en Asus Windows con VPN activa",
+            "Prueba end-to-end flujo completo (requiere VPN + archivos reales)"
         ],
         "tareas_completadas": [
-            "feat(vpn): vpn_check.py — detección WireGuard",
-            "feat(scraper): refactor scraper.py",
-            "feat(enriquecimiento): enriquecimiento.py",
-            "feat(generador): generador.py",
-            "test(smoke): test_smoke.py inicial"
+            "Onboarding gestion_comp al pipeline QA (black/flake8/mypy/pytest)",
+            "Integración en run_audit.sh (wildcard workspaces/*/)",
+            "Eliminación rama stale qa/onboarding-pipeline",
+            "Fix mypy.ini: disable_error_codes eliminado (redund. con setup.cfg)",
+            "36/36 tests pasando"
         ]
     },
     "jornada": {
         "fin": {
-            "fecha": "2026-04-15",
+            "fecha": "2026-04-16",
             "tareas_completadas": [
-                "Onboarding repo: estado_proyecto.json creado",
-                "Protocolo de jornada activado"
+                "Onboarding gestion_comp: black✅ flake8✅ mypy✅ pytest 36/36✅",
+                "Integrado en pipeline run_audit.sh via wildcard workspaces/*/",
+                "Fix mypy.ini (disable_error_codes redundante eliminado)",
+                "Rama stale qa/onboarding-pipeline eliminada local+remote",
+                "Pipeline 5/5 APROBADO incluyendo gestion_comp"
             ],
             "tareas_pendientes_manana": [
-                "Abrir PR: qa/onboarding-pipeline → main",
-                "Integrar gestion_comp en pipeline run_audit.sh",
-                "Verificar vpn_check.py con WireGuard activo"
+                "Verificar vpn_check.py (FortiClient) en Asus Windows",
+                "Prueba end-to-end flujo completo con VPN activa",
+                "richard_ia86_dev — resolver 420 rechazados pendientes_carga.csv",
+                "bd_pose_b52 — evaluar estado PR#7 migración PostgreSQL"
             ],
-            "notas_qa": "Repo nuevo — onboarding en curso. Sin pipeline QA aún.",
-            "estado_pipeline": "PENDIENTE"
+            "notas_qa": "Onboarding gestion_comp completado. Pipeline 5/5 VERDE. vpn_check usa FortiClient/Windows — no verificable en Linux.",
+            "estado_pipeline": "VERDE"
         }
     }
 }
