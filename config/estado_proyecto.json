@@ -39,7 +39,6 @@
             "tareas_pendientes_manana": [
                 "Verificar vpn_check.py (FortiClient) en Asus Windows",
                 "Prueba end-to-end flujo completo con VPN activa",
-                "richard_ia86_dev — resolver 420 rechazados pendientes_carga.csv",
                 "bd_pose_b52 — evaluar estado PR#7 migración PostgreSQL"
             ],
             "notas_qa": "Onboarding gestion_comp completado. Pipeline 5/5 VERDE. vpn_check usa FortiClient/Windows — no verificable en Linux.",
