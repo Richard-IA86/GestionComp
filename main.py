@@ -6,6 +6,7 @@ Punto de entrada principal del proyecto Compensaciones.
 Flujo:
   0. Verificar VPN activa (WireGuard)
   1. Descargar reportes desde el sistema web (requiere VPN activa)
+  1b. Actualizar Obras_Gerencias en Loockups.xlsx (FAT32)
   2. Enriquecer / procesar los datos descargados
   3. Generar informe de dirección diario
   4. Ejecutar pipeline ETL sobre los archivos descargados
@@ -85,6 +86,24 @@ def main() -> int:
             )
     else:
         logger.info("Paso 1/4 — Descarga omitida (--solo-procesar)")
+
+    # ── 1b. Actualizar Obras_Gerencias ───────────────────────────────────────
+    if not args.solo_procesar:
+        logger.info("Paso 1b — Actualizando Obras_Gerencias en Loockups.xlsx")
+        try:
+            from scripts.actualizar_obras_gerencias import run as _upd
+
+            codigo = _upd()
+            if codigo != 0:
+                logger.warning(
+                    "Obras_Gerencias: actualización con advertencias."
+                )
+        except Exception as exc:
+            logger.warning(
+                f"Obras_Gerencias no actualizado (no bloquea): {exc}"
+            )
+    else:
+        logger.info("Paso 1b — Actualización Obras omitida (--solo-procesar)")
 
     # ── 2. Procesamiento ─────────────────────────────────────────────────────
     logger.info("Paso 2/4 — Enriquecimiento de datos")

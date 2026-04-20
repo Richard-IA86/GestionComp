@@ -374,6 +374,59 @@ def _log_novedades(novedades: list[dict[str, Any]]) -> None:
         )
 
 
+def run(
+    obras_pronto: Path | None = None,
+    loockups: Path | None = None,
+    asignacion: Path | None = None,
+    dry_run: bool = False,
+) -> int:
+    """
+    Punto de entrada programático (sin argparse).
+    Llamar desde main.py u otros módulos.
+    Retorna 0 si OK, 1 si hubo error bloqueante.
+    """
+    _obras = obras_pronto or _OBRAS_PRONTO_DEFAULT
+    _loock = loockups or _LOOCKUPS_DEFAULT
+    _asig = asignacion or _ASIGNACION_DEFAULT
+
+    log.info("=== Actualización %s — %s ===", HOJA_OBRAS, _HOY)
+
+    try:
+        df_pronto = _leer_obras_pronto(_obras)
+        log.info("OBRAS PRONTO.xlsx: %d obras leídas.", len(df_pronto))
+    except (FileNotFoundError, ValueError) as exc:
+        log.error("%s", exc)
+        return 1
+
+    try:
+        df_actual = _leer_obras_gerencias(_loock)
+        log.info("%s actual: %d filas.", HOJA_OBRAS, len(df_actual))
+    except Exception as exc:
+        log.error("Error leyendo Loockups.xlsx: %s", exc)
+        return 1
+
+    mapa_gerencias = _leer_asignacion_gerencias(_asig)
+    if mapa_gerencias:
+        log.info(
+            "asignacion_gerencias.xlsx: %d entradas.",
+            len(mapa_gerencias),
+        )
+
+    df_nuevo, novedades = _calcular_cambios(
+        df_actual, df_pronto, mapa_gerencias
+    )
+    _log_novedades(novedades)
+
+    try:
+        _escribir_obras_gerencias(_loock, df_nuevo, dry_run)
+    except Exception as exc:
+        log.error("Error escribiendo Loockups.xlsx: %s", exc)
+        return 1
+
+    log.info("=== Fin actualización ===")
+    return 0
+
+
 def main() -> int:
     _configurar_log_archivo()
 
@@ -411,42 +464,12 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    log.info("=== Actualización %s — %s ===", HOJA_OBRAS, _HOY)
-
-    try:
-        df_pronto = _leer_obras_pronto(args.obras_pronto)
-        log.info("OBRAS PRONTO.xlsx: %d obras leídas.", len(df_pronto))
-    except (FileNotFoundError, ValueError) as exc:
-        log.error("%s", exc)
-        return 1
-
-    try:
-        df_actual = _leer_obras_gerencias(args.loockups)
-        log.info("%s actual: %d filas.", HOJA_OBRAS, len(df_actual))
-    except (FileNotFoundError, Exception) as exc:
-        log.error("Error leyendo Loockups.xlsx: %s", exc)
-        return 1
-
-    mapa_gerencias = _leer_asignacion_gerencias(args.asignacion)
-    if mapa_gerencias:
-        log.info(
-            "asignacion_gerencias.xlsx: %d entradas.",
-            len(mapa_gerencias),
-        )
-
-    df_nuevo, novedades = _calcular_cambios(
-        df_actual, df_pronto, mapa_gerencias
+    return run(
+        obras_pronto=args.obras_pronto,
+        loockups=args.loockups,
+        asignacion=args.asignacion,
+        dry_run=args.dry_run,
     )
-    _log_novedades(novedades)
-
-    try:
-        _escribir_obras_gerencias(args.loockups, df_nuevo, args.dry_run)
-    except Exception as exc:
-        log.error("Error escribiendo Loockups.xlsx: %s", exc)
-        return 1
-
-    log.info("=== Fin actualización ===")
-    return 0
 
 
 if __name__ == "__main__":

@@ -1,11 +1,12 @@
 # PowerShell — Ejecución diaria programada del proceso Compensaciones
-# Configurar en el Programador de Tareas de Windows para correr cada mañana.
+# Configurar en el Programador de Tareas de Windows para correr a las 21:00.
 #
 # Ejemplo de tarea programada (ejecutar como Administrador):
 #   $action  = New-ScheduledTaskAction -Execute "pwsh.exe" `
-#                -Argument "-NonInteractive -File C:\Dev\Compensaciones\scripts\ejecutar_diario.ps1"
-#   $trigger = New-ScheduledTaskTrigger -Daily -At "07:00"
-#   Register-ScheduledTask -TaskName "Compensaciones_Diario" -Action $action -Trigger $trigger
+#                -Argument "-NonInteractive -File C:\Dev\GestionComp\scripts\ejecutar_diario.ps1"
+#   $trigger = New-ScheduledTaskTrigger -Daily -At "21:00"
+#   Register-ScheduledTask -TaskName "Compensaciones_Diario" `
+#                          -Action $action -Trigger $trigger -RunLevel Highest
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
