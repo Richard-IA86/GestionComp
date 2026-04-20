@@ -201,6 +201,53 @@ def _descargar_cuenta_corriente(page: Page, nombre_destino: str) -> Path:
     return destino
 
 
+# ─── Descarga especial: catálogo de Obras ────────────────────────────────────
+
+
+def _descargar_obras_pronto(
+    page: Page,
+    nombre_destino: str,
+) -> Path | None:
+    """
+    Descarga el catálogo de obras desde https://10.2.1.81/Obra/index
+    y guarda el Excel en RUTA_DESCARGA.
+    Retorna la ruta guardada, o None si la descarga falla.
+    """
+    URL_OBRAS = "https://10.2.1.81/Obra/index"
+    logger.info(f"Descargando: {nombre_destino}")
+    try:
+        page.goto(URL_OBRAS, timeout=TIMEOUT_MS)
+        page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
+        _espera_humana(page, 1500, 2500)
+
+        # Mostrar todos los registros si hay selector de longitud
+        if page.locator('select[name="Tabla_length"]').count() > 0:
+            page.select_option('select[name="Tabla_length"]', value="-1")
+            page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
+            _espera_humana(page, 1000, 2000)
+            logger.info("  → Selector de registros puesto en 'All'...")
+
+        # Esperar botón Excel de DataTables
+        page.wait_for_selector(
+            "button.buttons-excel",
+            state="attached",
+            timeout=30_000,
+        )
+        logger.info("  → Iniciando descarga Excel...")
+
+        with page.expect_download(timeout=TIMEOUT_MS) as dl_info:
+            page.click("button.buttons-excel", force=True)
+
+        download: Download = dl_info.value
+        destino = RUTA_DESCARGA / nombre_destino
+        download.save_as(destino)
+        logger.info(f"  → Guardado en: {destino}")
+        return destino
+    except Exception as exc:
+        logger.warning(f"No se pudo descargar '{nombre_destino}': {exc}")
+        return None
+
+
 # ─── Orquestador principal ───────────────────────────────────────────────────
 
 
@@ -245,6 +292,7 @@ def descargar_todos_los_reportes(
         )
         context = browser.new_context(
             accept_downloads=True,
+            ignore_https_errors=True,
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",  # noqa: E501
             viewport={"width": 1366, "height": 768},
         )
@@ -266,6 +314,14 @@ def descargar_todos_los_reportes(
                     nombre_destino=nombre,
                 )
                 archivos_descargados.append(ruta)
+
+            # Obras: catálogo completo de ProntoNet (HTTPS)
+            ruta_obras = _descargar_obras_pronto(
+                page,
+                nombre_destino="OBRAS PRONTO.xlsx",
+            )
+            if ruta_obras is not None:
+                archivos_descargados.append(ruta_obras)
 
             # Cuenta corriente: flujo especial con filtros propios
             ruta_cc = _descargar_cuenta_corriente(
