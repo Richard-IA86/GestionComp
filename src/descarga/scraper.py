@@ -18,6 +18,7 @@ from config.settings import (
     APP_URL,
     APP_USUARIO,
     APP_PASSWORD,
+    CC_FECHA_DESDE,
     HEADLESS,
     TIMEOUT_MS,
     RUTA_DESCARGA,
@@ -59,9 +60,15 @@ def _hacer_login(page: Page) -> None:
     # ── Seleccionar empresa "Pose - 30-70910712-3" (id=1) ────────────────────
     # Interactuamos con el dropdown #bdDropdown de la navbar para que el JS
     # nativo de la página llame a SetBase correctamente (con CSRF y sesión).
+    # select_option() cambia el valor del DOM pero NO dispara el evento
+    # 'change' que el framework escucha → hay que dispararlo explícitamente.
     logger.info("Seleccionando empresa 'Pose - 30-70910712-3'...")
     page.wait_for_selector("#bdDropdown", state="visible", timeout=TIMEOUT_MS)
     page.select_option("#bdDropdown", value="1")
+    page.evaluate(
+        "document.querySelector('#bdDropdown')"
+        ".dispatchEvent(new Event('change', {bubbles: true}))"
+    )
 
     # Esperar a que el servidor procese SetBase y recargue el menú
     page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
@@ -139,7 +146,7 @@ def _descargar_cuenta_corriente(page: Page, nombre_destino: str) -> Path:
     (inicio fijo 01/04/2026, fin = hoy) y exportar Excel.
     """
     URL = "http://10.2.1.81/CuentaCorriente/AcreedoresPorTransacciones?IdProveedor=43292"  # noqa: E501
-    fecha_inicio = "01/04/2026"
+    fecha_inicio = CC_FECHA_DESDE
     fecha_fin = date.today().strftime("%d/%m/%Y")
     rango_fecha = f"{fecha_inicio} - {fecha_fin}"
 
@@ -201,51 +208,61 @@ def _descargar_cuenta_corriente(page: Page, nombre_destino: str) -> Path:
     return destino
 
 
-# ─── Descarga especial: catálogo de Obras ────────────────────────────────────
+# ─── Descarga especial: Obras ────────────────────────────────────────────────
 
 
-def _descargar_obras_pronto(
-    page: Page,
-    nombre_destino: str,
-) -> Path | None:
+def _descargar_obras(page: Page, nombre_destino: str) -> Path:
     """
-    Descarga el catálogo de obras desde https://10.2.1.81/Obra/index
-    y guarda el Excel en RUTA_DESCARGA.
-    Retorna la ruta guardada, o None si la descarga falla.
+    Descarga el reporte de Obras (histórico completo).
+
+    Flujo:
+      1. Navegar a /Obra/Index.
+      2. Seleccionar "Todas" en el dropdown #Activas (value="T") y
+         esperar a que el formulario recargue la tabla.
+      3. Mostrar todos los registros en DataTables (value="-1").
+      4. Exportar con el botón Excel.
     """
-    URL_OBRAS = "https://10.2.1.81/Obra/index"
+    URL = "http://10.2.1.81/Obra/Index"
+
     logger.info(f"Descargando: {nombre_destino}")
-    try:
-        page.goto(URL_OBRAS, timeout=TIMEOUT_MS)
+    page.goto(URL, timeout=TIMEOUT_MS)
+    page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
+    _espera_humana(page, 1500, 2500)
+
+    # 1. Seleccionar "Todas" en el dropdown de estado
+    page.wait_for_selector("#Activas", state="visible", timeout=TIMEOUT_MS)
+    valor_actual = page.locator("#Activas").input_value()
+    if valor_actual != "T":
+        page.select_option("#Activas", value="T")
+        logger.info("  → Estado puesto en 'Todas'")
         page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
-        _espera_humana(page, 1500, 2500)
+        _espera_humana(page, 1000, 2000)
+    else:
+        logger.info("  → Estado ya era 'Todas'")
 
-        # Mostrar todos los registros si hay selector de longitud
-        if page.locator('select[name="Tabla_length"]').count() > 0:
-            page.select_option('select[name="Tabla_length"]', value="-1")
-            page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
-            _espera_humana(page, 1000, 2000)
-            logger.info("  → Selector de registros puesto en 'All'...")
+    # 2. Mostrar todos los registros antes de exportar
+    length_select = 'select[name="Tabla_length"]'
+    if page.locator(length_select).count() > 0:
+        page.select_option(length_select, value="-1")
+        logger.info("  → Selector de registros puesto en 'All'")
+        page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
+        _espera_humana(page, 1000, 2000)
 
-        # Esperar botón Excel de DataTables
-        page.wait_for_selector(
-            "button.buttons-excel",
-            state="attached",
-            timeout=30_000,
-        )
-        logger.info("  → Iniciando descarga Excel...")
+    # 3. Esperar botón Excel y exportar
+    page.wait_for_selector(
+        "button.buttons-excel", state="attached", timeout=60000
+    )
+    _espera_humana(page, 500, 1000)
+    logger.info("  → Iniciando descarga Excel...")
 
-        with page.expect_download(timeout=TIMEOUT_MS) as dl_info:
-            page.click("button.buttons-excel", force=True)
+    with page.expect_download(timeout=TIMEOUT_MS) as dl_info:
+        page.click("button.buttons-excel", force=True)
 
-        download: Download = dl_info.value
-        destino = RUTA_DESCARGA / nombre_destino
-        download.save_as(destino)
-        logger.info(f"  → Guardado en: {destino}")
-        return destino
-    except Exception as exc:
-        logger.warning(f"No se pudo descargar '{nombre_destino}': {exc}")
-        return None
+    download: Download = dl_info.value
+    destino = RUTA_DESCARGA / nombre_destino
+    download.save_as(destino)
+    logger.info(f"  → Guardado en: {destino}")
+    return destino
 
 
 # ─── Orquestador principal ───────────────────────────────────────────────────
@@ -314,6 +331,7 @@ def descargar_todos_los_reportes(
                     nombre_destino=nombre,
                 )
                 archivos_descargados.append(ruta)
+                _espera_humana(page, 3000, 5000)
 
             # Obras: catálogo completo de ProntoNet (HTTPS)
             ruta_obras = _descargar_obras_pronto(
@@ -329,6 +347,14 @@ def descargar_todos_los_reportes(
                 nombre_destino="Cuenta corriente CONSTRUYA AL COSTO SRL - Pronto.xlsx",  # noqa: E501
             )
             archivos_descargados.append(ruta_cc)
+            _espera_humana(page, 3000, 5000)
+
+            # Obras: flujo especial con filtro de estado
+            ruta_obras = _descargar_obras(
+                page,
+                nombre_destino="Obras - Pronto Hist.xlsx",
+            )
+            archivos_descargados.append(ruta_obras)
 
         except Exception as exc:
             logger.error(f"Error durante la descarga: {exc}")

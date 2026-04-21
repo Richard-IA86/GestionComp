@@ -64,6 +64,19 @@ def main() -> int:
     logger.info(
         f"═══ Compensaciones — Informe {fecha.strftime('%d/%m/%Y')} ═══"
     )
+    # ── Retención de archivos ────────────────────────────────────────────────
+    from config.settings import (
+        INFORMES_DIR,
+        LOGS_DIR,
+        REPORTES_DIR,
+        RETENCION_LOGS_DIAS,
+        RETENCION_REPORTES_DIAS,
+    )
+    from src.utils.retencion import limpiar_archivos_antiguos
+
+    limpiar_archivos_antiguos(REPORTES_DIR, RETENCION_REPORTES_DIAS)
+    limpiar_archivos_antiguos(INFORMES_DIR, RETENCION_REPORTES_DIAS)
+    limpiar_archivos_antiguos(LOGS_DIR, RETENCION_LOGS_DIAS)
     # ── 0. VPN ──────────────────────────────────────────────────────────────
     if not args.solo_procesar:
         logger.info("Paso 0/4 — Verificando conectividad VPN")

@@ -53,6 +53,7 @@ ARCHIVOS_ESPERADOS = [
     "Cuenta corriente CONSTRUYA AL COSTO SRL - Pronto.xlsx",
     "Gastos.xlsx",
     "Listado Detallado de Órdenes de Pago - Pronto.xlsx",
+    "Obras - Pronto Hist.xlsx",
     "Ordenes de Pago - Pronto.xlsx",
 ]
 
@@ -65,3 +66,12 @@ VPN_PASSWORD = os.getenv("VPN_PASSWORD", "")
 VPN_TARGET_IP = os.getenv("VPN_TARGET_IP", "10.2.1.81")
 
 LOG_FILE = LOGS_DIR / "compensaciones.log"
+
+# ─── Política de retención ───────────────────────────────────────────────────
+RETENCION_REPORTES_DIAS = int(os.getenv("RETENCION_REPORTES_DIAS", "90"))
+RETENCION_LOGS_DIAS = int(os.getenv("RETENCION_LOGS_DIAS", "30"))
+
+# ─── Rango de fechas de análisis ────────────────────────────────────────────
+# Fecha de inicio fija del período analizado (formato DD/MM/YYYY).
+# Cambiar en .env cuando se quiera ampliar el período histórico.
+CC_FECHA_DESDE = os.getenv("CC_FECHA_DESDE", "01/04/2026")

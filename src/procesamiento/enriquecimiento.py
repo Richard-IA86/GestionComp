@@ -106,6 +106,23 @@ def procesar_listado_ordenes(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def procesar_obras(df: pd.DataFrame) -> pd.DataFrame:
+    """Limpia y enriquece el reporte histórico de Obras."""
+    df = df.copy()
+
+    for col_fecha in ("Fecha", "FechaInicio", "FechaFin"):
+        if col_fecha in df.columns:
+            df[col_fecha] = pd.to_datetime(
+                df[col_fecha], dayfirst=True, errors="coerce"
+            )
+
+    for col in df.select_dtypes(include="object").columns:
+        df[col] = df[col].str.strip()
+
+    logger.debug("Obras procesadas")
+    return df
+
+
 # ─── Orquestador ─────────────────────────────────────────────────────────────
 
 
@@ -124,10 +141,14 @@ def enriquecer_datos() -> dict[str, pd.DataFrame]:
             resultado["cuenta_corriente"] = procesar_cuenta_corriente(df)
         elif "gasto" in clave_lower:
             resultado["gastos"] = procesar_gastos(df)
-        elif "listado" in clave_lower and "orden" in clave_lower:
+        elif "listado" in clave_lower and (
+            "orden" in clave_lower or "órdenes" in clave_lower
+        ):
             resultado["listado_ordenes"] = procesar_listado_ordenes(df)
-        elif "orden" in clave_lower:
+        elif "orden" in clave_lower or "órdenes" in clave_lower:
             resultado["ordenes_pago"] = procesar_ordenes_pago(df)
+        elif "obra" in clave_lower:
+            resultado["obras"] = procesar_obras(df)
         else:
             resultado[clave] = df
             logger.warning(

@@ -72,8 +72,16 @@ def validar_rango_valor(df: pd.DataFrame) -> pd.DataFrame:
     """
     Marca en 'fuera_rango' los registros cuyo campo 'valor' no cae
     dentro del rango de negocio [VALOR_MINIMO_VARIABLE, VALOR_MAXIMO_VARIABLE].
+    Si la columna 'valor' no existe, marca todos como fuera de rango.
     """
     df = df.copy()
+    if "valor" not in df.columns:
+        df["fuera_rango"] = True
+        logger.warning(
+            "Columna 'valor' ausente: todos los registros marcados"
+            " como fuera de rango"
+        )
+        return df
     serie = pd.to_numeric(df["valor"], errors="coerce")
     df["fuera_rango"] = (
         serie.isna()
