@@ -12,36 +12,52 @@
         }
     ],
     "desarrollo_local": {
-        "fecha_actualizacion": "2026-04-16",
-        "punto_de_partida_manana": "Pipeline 6/6 APROBADO — gestion_comp integrado. Pendiente: vpn_check FortiClient en Asus Windows.",
+        "fecha_actualizacion": "2026-04-20",
+        "punto_de_partida_manana": "Prueba e2e exitosa. Completar procesar_*() con columnas reales de input_raw/. Completar generador.py.",
         "tareas_pendientes": [
-            "Verificar vpn_check.py (FortiClient) en Asus Windows con VPN activa",
-            "Prueba end-to-end flujo completo (requiere VPN + archivos reales)"
+            "Completar procesar_cuenta_corriente(), procesar_listado_ordenes(), procesar_ordenes_pago(), procesar_obras() con columnas reales",
+            "Completar src/reportes/generador.py con formato final del informe de dirección",
+            "Decidir qué hacer con Paso 4/4 ETL (columnas reales no tienen 'valor')",
+            "Conseguir URL de Gastos.xlsx y activar su descarga",
+            "Definir esquema BD destino para src/etl/carga.py"
         ],
         "tareas_completadas": [
-            "Onboarding gestion_comp al pipeline QA (black/flake8/mypy/pytest)",
-            "Integración en run_audit.sh (wildcard workspaces/*/)",
-            "Eliminación rama stale qa/onboarding-pipeline",
-            "Fix mypy.ini: disable_error_codes eliminado (redund. con setup.cfg)",
-            "36/36 tests pasando"
+            "Prueba end-to-end exitosa: 4 archivos descargados (exit code 0)",
+            "Fix dispatchEvent('change') en #bdDropdown para selección automática de empresa",
+            "Bajada automática de Obras: _descargar_obras(), procesar_obras()",
+            "Política de retención: src/utils/retencion.py (90d reportes / 30d logs)",
+            "Tests de humo ETL: tests/test_etl_smoke.py (8 tests)",
+            "Test integración --solo-procesar: tests/test_integracion.py",
+            "CC_FECHA_DESDE configurable via .env",
+            "Pausa 3-5s entre reportes en orquestador",
+            "Fix routing 'órdenes' con acento en enriquecimiento.py",
+            "Fix validar_rango_valor() defensivo ante columna 'valor' ausente",
+            "Rebase sobre 14 commits remotos de agentes autónomos + resolución de conflictos",
+            "Documentación protocolo: prohibición git push autónomo",
+            "Documentación protocolo: inicio de jornada usa git fetch (no pull)"
         ]
     },
     "jornada": {
         "fin": {
-            "fecha": "2026-04-16",
+            "fecha": "2026-04-20",
             "tareas_completadas": [
-                "Onboarding gestion_comp: black✅ flake8✅ mypy✅ pytest 36/36✅",
-                "Integrado en pipeline run_audit.sh via wildcard workspaces/*/",
-                "Fix mypy.ini (disable_error_codes redundante eliminado)",
-                "Rama stale qa/onboarding-pipeline eliminada local+remote",
-                "Pipeline 5/5 APROBADO incluyendo gestion_comp"
+                "Prueba end-to-end completa: login + 4 descargas + procesamiento + informes (exit 0)",
+                "Fix selector empresa: dispatchEvent change en #bdDropdown",
+                "Bajada automática Obras - Pronto Hist.xlsx (572 filas, 14 cols)",
+                "Política de retención archivos (src/utils/retencion.py)",
+                "Tests ETL smoke (8) + test integración --solo-procesar (1) → 45/45 total",
+                "Resolución divergencia git con 14 commits remotos de agentes",
+                "Protocolo inicio/cierre de jornada corregido (git fetch vs git pull)",
+                "QA_MEJORAS.md creado con propuesta documentada"
             ],
             "tareas_pendientes_manana": [
-                "Verificar vpn_check.py (FortiClient) en Asus Windows",
-                "Prueba end-to-end flujo completo con VPN activa",
-                "bd_pose_b52 — evaluar estado PR#7 migración PostgreSQL"
+                "Completar procesar_*() con columnas reales de input_raw/ (CC: 11c, Listado: 11c, OP: 52c, Obras: 14c)",
+                "Completar src/reportes/generador.py con formato final informe dirección",
+                "Decidir Paso 4/4 ETL: mapear columnas o sacar del loop",
+                "Conseguir URL de Gastos.xlsx",
+                "Definir esquema BD destino (src/etl/carga.py → a_bd())"
             ],
-            "notas_qa": "Onboarding gestion_comp completado. Pipeline 5/5 VERDE. vpn_check usa FortiClient/Windows — no verificable en Linux.",
+            "notas_qa": "black 33/33 OK | flake8 0 errores | mypy 0 errores | pytest 45/45. Repo con 4 commits locales adelante de origin/main — pendiente push manual por usuario.",
             "estado_pipeline": "VERDE"
         }
     }
