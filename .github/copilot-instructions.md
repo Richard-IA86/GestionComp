@@ -182,13 +182,23 @@ triggers explícitos del desarrollador. No en ningún otro momento.
 
 1. Leer `config/estado_proyecto.json` → sección `jornada.fin`
    (archivos locales — estado al cierre de ayer).
-2. Ejecutar `git pull` para bajar novedades del remoto.
-3. Recién entonces reportar al desarrollador:
+2. Ejecutar `git fetch origin` (NO `git pull`) para ver el estado
+   remoto **sin modificar el árbol local**.
+3. Ejecutar `git status` y `git log --oneline -5` para detectar
+   si hay divergencia antes de tocar nada.
+4. Reportar al desarrollador:
    - `tareas_pendientes_manana` (lo que quedó pendiente ayer)
    - `notas_qa` (observación del cierre anterior)
    - `estado_pipeline` (VERDE / AMARILLO / ROJO)
-   - Commits nuevos descargados (si los hay)
-4. **No modificar el archivo en este trigger.**
+   - Resultado del fetch: cuántos commits nuevos hay en origin (si los hay)
+   - Si hay divergencia: **STOP — informar y pedir instrucciones**.
+     NO hacer `git pull`, `git merge` ni `git rebase` de forma autónoma.
+5. **No modificar el archivo en este trigger.**
+
+> **¿Por qué `fetch` y no `pull`?**
+> `git pull` con commits locales hace un merge silencioso y puede
+> generar divergencias o conflictos sin aviso. `git fetch` solo
+> descarga metadata — el desarrollador decide cómo integrar.
 
 ### Trigger: "fin de jornada"
 
@@ -214,8 +224,10 @@ También actualizar (retrocompatibilidad):
 Luego:
 
 ```bash
-git status
-git add -A
-git commit -m "chore(jornada): cierre YYYY-MM-DD"
-git push
+git fetch origin          # ver si hay commits remotos nuevos
+git status                # confirmar estado local
+git log --oneline -3      # mostrar al usuario qué hay en local
+# Si origin/main está adelante → STOP, informar al usuario
+# Si local está adelante → pedir aprobación para git push
+# Si hay divergencia → STOP, NO actuar de forma autónoma
 ```
