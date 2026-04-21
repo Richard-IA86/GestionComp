@@ -21,6 +21,47 @@
 
 ---
 
+
+# Principio Operativo #2 — GIT: PROHIBIDO PUSH AUTÓNOMO
+
+> **NINGÚN agente puede hacer `git push` sin aprobación explícita del usuario.**
+
+## Problema documentado — 2026-04-20
+
+Durante la jornada del 20/04/2026 se detectó que agentes de Copilot
+habían empujado **14 commits directamente a `origin/main`** sin pasar
+por revisión local:
+
+- `feat(obras): integrate Obras_Gerencias update into main.py`
+- `feat(descarga): add Obras download from ProntoNet HTTPS`
+- `docs(.github): enforcing ley marcial...`
+- ... (y 11 más)
+
+Esto generó una divergencia: local tenía commits propios + faltaban
+los 14 remotos → imposible hacer push limpio → trabajo perdido o
+conflictos.
+
+## Protocolo obligatorio de Git para agentes
+
+1. **`git add -A`** → permitido.
+2. **`git commit -m "..."`** → permitido, con mensaje descriptivo.
+3. **`git status` y `git log --oneline -5`** → permitido, para informar.
+4. **`git push`** → **PROHIBIDO. Siempre preguntar al usuario primero.**
+5. **`git pull`, `git rebase`, `git merge`** → **PROHIBIDO sin aprobación.**
+6. **`git reset --hard`, `git push --force`** → **ABSOLUTAMENTE PROHIBIDO.**
+
+## Flujo correcto al cierre de jornada
+
+```
+1. black + flake8 + mypy + pytest → todo verde
+2. git add -A
+3. git commit -m "descripción"
+4. git fetch origin          ← ver si hay divergencia
+5. Informar al usuario el estado → el usuario decide si/cómo pushear
+```
+
+---
+
 # Instrucciones Copilot — gestion_comp
 
 ## Propósito del Proyecto
