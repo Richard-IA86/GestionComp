@@ -333,14 +333,6 @@ def descargar_todos_los_reportes(
                 archivos_descargados.append(ruta)
                 _espera_humana(page, 3000, 5000)
 
-            # Obras: catálogo completo de ProntoNet (HTTPS)
-            ruta_obras = _descargar_obras_pronto(
-                page,
-                nombre_destino="OBRAS PRONTO.xlsx",
-            )
-            if ruta_obras is not None:
-                archivos_descargados.append(ruta_obras)
-
             # Cuenta corriente: flujo especial con filtros propios
             ruta_cc = _descargar_cuenta_corriente(
                 page,
