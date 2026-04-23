@@ -58,20 +58,22 @@ def _hacer_login(page: Page) -> None:
     _espera_humana(page, 3000, 5000)
 
     # ── Seleccionar empresa "Pose - 30-70910712-3" (id=1) ────────────────────
-    # Interactuamos con el dropdown #bdDropdown de la navbar para que el JS
-    # nativo de la página llame a SetBase correctamente (con CSRF y sesión).
     # select_option() cambia el valor del DOM pero NO dispara el evento
     # 'change' que el framework escucha → hay que dispararlo explícitamente.
+    # El dispatchEvent desencadena una navegación: usamos expect_navigation()
+    # para que Playwright la espere antes de continuar.
     logger.info("Seleccionando empresa 'Pose - 30-70910712-3'...")
     page.wait_for_selector("#bdDropdown", state="visible", timeout=TIMEOUT_MS)
-    page.select_option("#bdDropdown", value="1")
-    page.evaluate(
-        "document.querySelector('#bdDropdown')"
-        ".dispatchEvent(new Event('change', {bubbles: true}))"
-    )
 
-    # Esperar a que el servidor procese SetBase y recargue el menú
-    page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
+    # select_option ya dispara el evento change internamente en Playwright.
+    # expect_navigation captura la recarga de página que eso desencadena.
+    # NO llamar page.evaluate(dispatchEvent) después — el contexto ya
+    # fue destruido por la navegación.
+    with page.expect_navigation(
+        wait_until="networkidle", timeout=TIMEOUT_MS
+    ):
+        page.select_option("#bdDropdown", value="1")
+
     _espera_humana(page, 2000, 3000)
     logger.info("Login y selección de empresa exitosos")
 

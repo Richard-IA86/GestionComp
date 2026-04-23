@@ -49,7 +49,7 @@ _SCRIPT_DIR = Path(__file__).parent
 _BASE_DIR = _SCRIPT_DIR.parent  # gestion_comp/
 
 _INPUT_RAW_DIR = _BASE_DIR / "input_raw"
-_OBRAS_PRONTO_DEFAULT = _INPUT_RAW_DIR / "OBRAS PRONTO.xlsx"
+_OBRAS_PRONTO_DEFAULT = _INPUT_RAW_DIR / "Obras - Pronto Hist.xlsx"
 _LOGS_DIR = _BASE_DIR / "logs"
 
 _FAT32_COMMON = Path("/media/richard/FAT32/report_gerencias/input_raw/common")
@@ -91,7 +91,7 @@ def _leer_obras_pronto(ruta: Path) -> pd.DataFrame:
     """
     if not ruta.exists():
         raise FileNotFoundError(
-            f"OBRAS PRONTO.xlsx no encontrado: {ruta}\n"
+            f"Obras - Pronto Hist.xlsx no encontrado: {ruta}\n"
             "Ejecutar primero GestionComp para descargarlo."
         )
     df = pd.read_excel(ruta)
@@ -122,7 +122,7 @@ def _leer_obras_pronto(ruta: Path) -> pd.DataFrame:
     ]
     if faltantes:
         raise ValueError(
-            f"OBRAS PRONTO.xlsx sin columnas requeridas: {faltantes}"
+            f"Obras - Pronto Hist.xlsx sin columnas requeridas: {faltantes}"
         )
 
     df = df.rename(
@@ -393,7 +393,7 @@ def run(
 
     try:
         df_pronto = _leer_obras_pronto(_obras)
-        log.info("OBRAS PRONTO.xlsx: %d obras leídas.", len(df_pronto))
+        log.info("Obras - Pronto Hist.xlsx: %d obras leídas.", len(df_pronto))
     except (FileNotFoundError, ValueError) as exc:
         log.error("%s", exc)
         return 1
@@ -438,7 +438,7 @@ def main() -> int:
         type=Path,
         default=_OBRAS_PRONTO_DEFAULT,
         metavar="RUTA",
-        help="Ruta a OBRAS PRONTO.xlsx (descargado por GestionComp)",
+        help="Ruta a Obras - Pronto Hist.xlsx (descargado por GestionComp)",
     )
     parser.add_argument(
         "--loockups",

@@ -39,25 +39,25 @@
     },
     "jornada": {
         "fin": {
-            "fecha": "2026-04-20",
+            "fecha": "2026-04-23",
             "tareas_completadas": [
-                "Prueba end-to-end completa: login + 4 descargas + procesamiento + informes (exit 0)",
-                "Fix selector empresa: dispatchEvent change en #bdDropdown",
-                "Bajada automática Obras - Pronto Hist.xlsx (572 filas, 14 cols)",
-                "Política de retención archivos (src/utils/retencion.py)",
-                "Tests ETL smoke (8) + test integración --solo-procesar (1) → 45/45 total",
-                "Resolución divergencia git con 14 commits remotos de agentes",
-                "Protocolo inicio/cierre de jornada corregido (git fetch vs git pull)",
-                "QA_MEJORAS.md creado con propuesta documentada"
+                "VPN FortiClient automática: vpn_check.py reescrito con locateCenterOnScreen + doble clic + 4xTab + Enter — FUNCIONA",
+                "forti_icon_ref.png creada (78x55px, escudo azul FortiClient)",
+                "Fix scraper select_option dentro de expect_navigation — resuelve 'Execution context was destroyed'",
+                "Flujo end-to-end completo con VPN desconectada: VPN auto → login → empresa OK → 4 archivos descargados → informes generados (exit 0)",
+                "Fix nombre archivo: OBRAS PRONTO.xlsx → Obras - Pronto Hist.xlsx en actualizar_obras_gerencias.py",
+                "opencv-python añadido a requirements.txt"
             ],
             "tareas_pendientes_manana": [
-                "Completar procesar_*() con columnas reales de input_raw/ (CC: 11c, Listado: 11c, OP: 52c, Obras: 14c)",
+                "Investigar 'imagen rara' que aparece durante ejecución (ventana FortiClient visible brevemente)",
+                "Columna 'valor' ausente en los 4 Excel: mapear columnas reales y completar procesar_*() en enriquecimiento.py",
                 "Completar src/reportes/generador.py con formato final informe dirección",
-                "Decidir Paso 4/4 ETL: mapear columnas o sacar del loop",
+                "Decidir Paso 4/4 ETL: mapear columnas reales o rediseñar",
+                "Programar Task Scheduler a las 23:30 con 'Wake the computer to run this task'",
                 "Conseguir URL de Gastos.xlsx",
                 "Definir esquema BD destino (src/etl/carga.py → a_bd())"
             ],
-            "notas_qa": "black 33/33 OK | flake8 0 errores | mypy 0 errores | pytest 45/45. Repo con 4 commits locales adelante de origin/main — pendiente push manual por usuario.",
+            "notas_qa": "flake8+mypy OK en scraper.py y vpn_check.py. pytest pendiente ejecutar. Pipeline end-to-end: EXIT CODE 0 confirmado con VPN desconectada. 2 warnings subsisten: (1) ETL columna 'valor' ausente en 4 Excel, (2) imagen FortiClient visible brevemente.",
             "estado_pipeline": "VERDE"
         }
     }

@@ -152,24 +152,21 @@ Todo código generado debe pasar sin errores ni advertencias.
 ## Protocolo de Sincronización — OBLIGATORIO ANTES DE EDITAR
 
 > **REGLA DE ORO:** Antes de modificar CUALQUIER archivo en este repo,
-> ejecutar `prefetch_check.sh` para detectar si origin tiene commits
-> que el local desconoce. Si detecta divergencia → `git pull` primero.
-> Ignorar esta regla puede causar sobreescritura silenciosa o conflictos
-> en el push de cierre.
+> ejecutar los siguientes comandos para detectar si origin tiene commits
+> que el local desconoce. Si detecta divergencia → STOP, informar al
+> usuario. NO hacer `git pull` de forma autónoma.
 
-```bash
-# Verificar repo antes de editar
-bash /home/richard/Dev/auditoria_ecosauron/scripts/prefetch_check.sh \
-    /home/richard/Dev/auditoria_ecosauron/workspaces/gestion_comp
-
-# Verificar archivo específico
-bash /home/richard/Dev/auditoria_ecosauron/scripts/prefetch_check.sh \
-    /home/richard/Dev/auditoria_ecosauron/workspaces/gestion_comp \
-    <ruta_archivo>
+```powershell
+# Verificar estado antes de editar (Windows / PowerShell)
+cd C:\Dev\GestionComp
+git fetch origin
+git status
+git log --oneline -5
+git log --oneline origin/main -5
 ```
 
-- Salida `✔` = seguro editar.
-- Salida `✘ DIVERGENCIA` = hacer `git pull` primero, sin excepción.
+- Sin divergencia (`Your branch is up to date`) → seguro editar.
+- Con divergencia → **STOP — informar al usuario y pedir instrucciones.**
 
 ---
 
