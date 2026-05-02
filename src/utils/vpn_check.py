@@ -33,8 +33,9 @@ _TITULO_VENTANA = "FortiClient"
 _FORTI_ICON_REF = Path(__file__).parent / "forti_icon_ref.png"
 # Segundos de espera tras abrir la GUI antes de buscar la ventana
 _ESPERA_GUI_S = 5
-# Segundos de espera para que el túnel quede establecido
-_ESPERA_TUNEL_S = 15
+# Máximo de segundos esperando que el túnel quede establecido
+_ESPERA_TUNEL_MAX_S = 40
+_ESPERA_TUNEL_POLL_S = 5
 
 
 def _vpn_activa() -> bool:
@@ -145,10 +146,22 @@ def _levantar_vpn_gui() -> bool:
     pyautogui.press("enter")
 
     logger.info(
-        f"Esperando {_ESPERA_TUNEL_S} s para que el túnel se establezca..."
+        f"Esperando hasta {_ESPERA_TUNEL_MAX_S} s a que el túnel"
+        " se establezca..."
     )
-    time.sleep(_ESPERA_TUNEL_S)
-    return True
+    transcurrido = 0
+    while transcurrido < _ESPERA_TUNEL_MAX_S:
+        time.sleep(_ESPERA_TUNEL_POLL_S)
+        transcurrido += _ESPERA_TUNEL_POLL_S
+        if _vpn_activa():
+            logger.info(
+                f"Túnel activo tras {transcurrido} s."
+            )
+            return True
+        logger.debug(
+            f"Túnel aún no disponible ({transcurrido}s)..."
+        )
+    return False
 
 
 def asegurar_vpn() -> bool:
@@ -160,7 +173,7 @@ def asegurar_vpn() -> bool:
         logger.debug(f"VPN activa — {VPN_TARGET_IP} alcanzable.")
         return True
     logger.warning(f"VPN inactiva. Intentando conectar '{_TITULO_VENTANA}'...")
-    if _levantar_vpn_gui() and _vpn_activa():
+    if _levantar_vpn_gui():
         logger.success("VPN activada correctamente.")
         return True
     logger.error(

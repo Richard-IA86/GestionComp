@@ -12,8 +12,8 @@
         }
     ],
     "desarrollo_local": {
-        "fecha_actualizacion": "2026-04-20",
-        "punto_de_partida_manana": "Prueba e2e exitosa. Completar procesar_*() con columnas reales de input_raw/. Completar generador.py.",
+        "fecha_actualizacion": "2026-05-02",
+        "punto_de_partida_manana": "Retomar según el cierre automático",
         "tareas_pendientes": [
             "Completar procesar_cuenta_corriente(), procesar_listado_ordenes(), procesar_ordenes_pago(), procesar_obras() con columnas reales",
             "Completar src/reportes/generador.py con formato final del informe de dirección",
@@ -35,29 +35,20 @@
             "Rebase sobre 14 commits remotos de agentes autónomos + resolución de conflictos",
             "Documentación protocolo: prohibición git push autónomo",
             "Documentación protocolo: inicio de jornada usa git fetch (no pull)"
-        ]
+        ],
+        "fecha_ultima_actualizacion": "2026-05-02"
     },
     "jornada": {
         "fin": {
-            "fecha": "2026-04-23",
+            "fecha": "2026-05-02",
             "tareas_completadas": [
-                "VPN FortiClient automática: vpn_check.py reescrito con locateCenterOnScreen + doble clic + 4xTab + Enter — FUNCIONA",
-                "forti_icon_ref.png creada (78x55px, escudo azul FortiClient)",
-                "Fix scraper select_option dentro de expect_navigation — resuelve 'Execution context was destroyed'",
-                "Flujo end-to-end completo con VPN desconectada: VPN auto → login → empresa OK → 4 archivos descargados → informes generados (exit 0)",
-                "Fix nombre archivo: OBRAS PRONTO.xlsx → Obras - Pronto Hist.xlsx en actualizar_obras_gerencias.py",
-                "opencv-python añadido a requirements.txt"
+                "Ejecución de sincronización de jornada",
+                "Actualización de estado_proyecto.json"
             ],
             "tareas_pendientes_manana": [
-                "Investigar 'imagen rara' que aparece durante ejecución (ventana FortiClient visible brevemente)",
-                "Columna 'valor' ausente en los 4 Excel: mapear columnas reales y completar procesar_*() en enriquecimiento.py",
-                "Completar src/reportes/generador.py con formato final informe dirección",
-                "Decidir Paso 4/4 ETL: mapear columnas reales o rediseñar",
-                "Programar Task Scheduler a las 23:30 con 'Wake the computer to run this task'",
-                "Conseguir URL de Gastos.xlsx",
-                "Definir esquema BD destino (src/etl/carga.py → a_bd())"
+                "Reanudación de los sprints en curso"
             ],
-            "notas_qa": "flake8+mypy OK en scraper.py y vpn_check.py. pytest pendiente ejecutar. Pipeline end-to-end: EXIT CODE 0 confirmado con VPN desconectada. 2 warnings subsisten: (1) ETL columna 'valor' ausente en 4 Excel, (2) imagen FortiClient visible brevemente.",
+            "notas_qa": "Cierre de jornada automático de la IA.",
             "estado_pipeline": "VERDE"
         }
     }
