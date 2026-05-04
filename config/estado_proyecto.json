@@ -12,8 +12,8 @@
         }
     ],
     "desarrollo_local": {
-        "fecha_actualizacion": "2026-05-02",
-        "punto_de_partida_manana": "Retomar según el cierre automático",
+        "fecha_actualizacion": "2026-05-04",
+        "punto_de_partida_manana": "Agregar carga dim_obras_gerencias a PostgreSQL en actualizar_obras_gerencias.py, luego actualizar b53.py con el JOIN",
         "tareas_pendientes": [
             "Completar procesar_cuenta_corriente(), procesar_listado_ordenes(), procesar_ordenes_pago(), procesar_obras() con columnas reales",
             "Completar src/reportes/generador.py con formato final del informe de dirección",
@@ -40,15 +40,21 @@
     },
     "jornada": {
         "fin": {
-            "fecha": "2026-05-02",
+            "fecha": "2026-05-04",
             "tareas_completadas": [
-                "Ejecución de sincronización de jornada",
-                "Actualización de estado_proyecto.json"
+                "Auditoría completa de scripts/actualizar_obras_gerencias.py",
+                "Confirmado: script COMPLETO, integrado en main.py como Paso 1b",
+                "Confirmado: lee Obras - Pronto Hist.xlsx + asignacion_gerencias.xlsx del Director",
+                "Confirmado: escribe hoja Obras_Gerencias en Loockups.xlsx (FAT32)",
+                "Identificadas 4 brechas para cerrar el loop con el dashboard B53"
             ],
             "tareas_pendientes_manana": [
-                "Reanudación de los sprints en curso"
+                "CRÍTICO: Agregar carga a PostgreSQL en actualizar_obras_gerencias.py (tabla dim_obras_gerencias)",
+                "CRÍTICO: Actualizar endpoint b53.py con JOIN dim_obras_gerencias para poblar obras_monthly",
+                "QA: tests/test_actualizar_obras_gerencias.py con fixtures sin FAT32",
+                "Verificar deploy en producción: www.gestionpose.com.ar"
             ],
-            "notas_qa": "Cierre de jornada automático de la IA.",
+            "notas_qa": "Script del maestro Loockups auditado y funcional. Brecha crítica: solo escribe a FAT32, no a PostgreSQL. El endpoint b53.py retorna obras_monthly vacío hasta que se resuelva.",
             "estado_pipeline": "VERDE"
         }
     }
