@@ -38,6 +38,15 @@
         ],
         "fecha_ultima_actualizacion": "2026-05-02"
     },
+    "reglas_negocio": [
+        {
+            "id": "RN-001",
+            "fecha": "2026-05-04",
+            "titulo": "Obras históricas pre-ProntoNet — preservar siempre",
+            "descripcion": "El dataset arranca en 2019. Hasta ~2023 la operación se registraba en Excel sin ProntoNet (no existía la versión Net). Hay obras en Loockups.xlsx cargadas a mano que NUNCA tendrán contrapartida en ProntoNet. ProntoNet es fuente de verdad SOLO para obras activas. Toda obra en Loockups sin contrapartida en ProntoNet es histórica legítima y debe preservarse intacta. Tipo de novedad: SIN_PRONTO (informativa, sin acción requerida).",
+            "impacto": "_calcular_cambios(): bloque SIN_PRONTO preserva todas las filas del Loockups no presentes en ProntoNet, sin distinción numérico/no-numérico."
+        }
+    ],
     "jornada": {
         "fin": {
             "fecha": "2026-05-04",
@@ -46,15 +55,20 @@
                 "Confirmado: script COMPLETO, integrado en main.py como Paso 1b",
                 "Confirmado: lee Obras - Pronto Hist.xlsx + asignacion_gerencias.xlsx del Director",
                 "Confirmado: escribe hoja Obras_Gerencias en Loockups.xlsx (FAT32)",
-                "Identificadas 4 brechas para cerrar el loop con el dashboard B53"
+                "Identificadas 4 brechas para cerrar el loop con el dashboard B53",
+                "fix: TypeError sorted() float vs str en _leer_obras_gerencias (NaN en OBRA_PRONTO)",
+                "fix: preservar obras históricas pre-ProntoNet (RN-001) — SIN_PRONTO no borra",
+                "feat: dim_loader.py + pipeline.py en Pose_DataPipeline",
+                "feat: b53.py con JOIN dim_obras_gerencias en Pose_API",
+                "feat: _sincronizar_postgres() en actualizar_obras_gerencias.py"
             ],
             "tareas_pendientes_manana": [
-                "CRÍTICO: Agregar carga a PostgreSQL en actualizar_obras_gerencias.py (tabla dim_obras_gerencias)",
-                "CRÍTICO: Actualizar endpoint b53.py con JOIN dim_obras_gerencias para poblar obras_monthly",
+                "Ejecutar sin --dry-run y verificar escritura real en Loockups.xlsx",
+                "Test real con conexión PostgreSQL DEV (dim_obras_gerencias)",
                 "QA: tests/test_actualizar_obras_gerencias.py con fixtures sin FAT32",
                 "Verificar deploy en producción: www.gestionpose.com.ar"
             ],
-            "notas_qa": "Script del maestro Loockups auditado y funcional. Brecha crítica: solo escribe a FAT32, no a PostgreSQL. El endpoint b53.py retorna obras_monthly vacío hasta que se resuelva.",
+            "notas_qa": "RN-001 registrada. Dry-run OK: 582 filas (434 ProntoNet + 148 históricas), 11 COMPENSABLE_CAMBIO accionables. Listo para ejecución real.",
             "estado_pipeline": "VERDE"
         }
     }

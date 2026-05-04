@@ -18,11 +18,20 @@ Destino:
   - Hoja Obras_Gerencias en Loockups.xlsx (FAT32).
   - Log de novedades en logs/obras_gerencias_<fecha>.log.
 
+Regla de negocio — fuentes históricas (2026-05-04):
+  El set de datos arranca en 2019. Hasta ~2023 toda la operación se
+  registraba en Excel sin ProntoNet. Existen obras en Loockups.xlsx
+  cargadas a mano que NUNCA existirán en ProntoNet.
+  Por eso ProntoNet es fuente de verdad SOLO para obras activas;
+  las obras del Loockups sin contrapartida en ProntoNet son históricas
+  legítimas y deben preservarse SIEMPRE (tipo SIN_PRONTO, no borrar).
+
 Novedades detectadas:
-  - Obras nuevas en ProntoNet (GERENCIA = SIN ASIGNAR).
-  - Obras numéricas no encontradas en ProntoNet (se marcan).
-  - Cambios en COMPENSABLE.
-  - Gerencias asignadas por el Director.
+  - NUEVA: obra en ProntoNet que no está en Loockups (GERENCIA=SIN ASIGNAR).
+  - SIN_PRONTO: obra en Loockups sin registro en ProntoNet — histórica o
+    cargada a mano. Se preserva íntegra, solo se loguea el conteo.
+  - COMPENSABLE_CAMBIO: campo COMPENSABLE cambió en ProntoNet.
+  - GERENCIA_ASIGNADA: gerencia actualizada por el Director.
 
 Uso:
   python scripts/actualizar_obras_gerencias.py
@@ -36,6 +45,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import subprocess
 import sys
 from datetime import date
 from pathlib import Path
@@ -55,6 +65,10 @@ _LOGS_DIR = _BASE_DIR / "logs"
 _FAT32_COMMON = Path("/media/richard/FAT32/report_gerencias/input_raw/common")
 _LOOCKUPS_DEFAULT = _FAT32_COMMON / "Loockups.xlsx"
 _ASIGNACION_DEFAULT = _FAT32_COMMON / "asignacion_gerencias.xlsx"
+
+# ── Pose_DataPipeline — sincronización automática ────────────────────────────
+_DATAPIPELINE_DIR = Path("/home/richard/Dev/Pose_DataPipeline")
+_DATAPIPELINE_VENV_PYTHON = _DATAPIPELINE_DIR / "venv/bin/python"
 
 HOJA_OBRAS = "Obras_Gerencias"
 GERENCIA_SIN_ASIGNAR = "SIN ASIGNAR"
@@ -148,6 +162,9 @@ def _leer_obras_gerencias(loockups: Path) -> pd.DataFrame:
     df.columns = [str(c).strip() for c in df.columns]
     df = df.dropna(how="all")
     df["OBRA_PRONTO"] = df["OBRA_PRONTO"].astype(str).str.strip()
+    # Eliminar filas con OBRA_PRONTO vacío o "nan" (celdas vacías en Excel)
+    df = df[df["OBRA_PRONTO"].str.len() > 0]
+    df = df[df["OBRA_PRONTO"].str.lower() != "nan"]
     return df
 
 
@@ -224,16 +241,17 @@ def _calcular_cambios(
             }
         )
 
-    # Obras numéricas que desaparecieron de ProntoNet
+    # Obras en Loockups que no están en ProntoNet
+    # Pueden ser: históricas pre-ProntoNet, cargadas a mano, o inactivas.
+    # Se registran como informativas pero SIEMPRE se preservan en el Excel.
     for op in sorted(set(idx_actual) - set(idx_pronto)):
-        if op.isnumeric():
-            novedades.append(
-                {
-                    "tipo": "DESACTIVADA",
-                    "obra_pronto": op,
-                    "detalle": str(idx_actual[op].get("DESCRIPCION_OBRA", "")),
-                }
-            )
+        novedades.append(
+            {
+                "tipo": "SIN_PRONTO",
+                "obra_pronto": op,
+                "detalle": str(idx_actual[op].get("DESCRIPCION_OBRA", "")),
+            }
+        )
 
     # Cambios en COMPENSABLE
     for op in sorted(set(idx_pronto) & set(idx_actual)):
@@ -301,23 +319,76 @@ def _calcular_cambios(
             fila[col] = row_a[col] if row_a is not None else None
         filas.append(fila)
 
-    # Filas especiales del actual (SIN OBRA, SEDE, etc. — no numéricas)
+    # Obras del Loockups que no están en ProntoNet → PRESERVAR SIEMPRE.
+    # Incluye: históricas pre-ProntoNet, cargadas a mano, SEDE, SIN OBRA, etc.
     for op, row_a in idx_actual.items():
         if op in idx_pronto:
             continue
-        if not op.isnumeric():
-            fila_esp: dict[str, Any] = {
-                "OBRA_PRONTO": op,
-                "DESCRIPCION_OBRA": str(row_a.get("DESCRIPCION_OBRA", "")),
-                "GERENCIA": str(row_a.get("GERENCIA", "")),
-                "COMPENSABLE": str(row_a.get("COMPENSABLE", "")),
-            }
-            for col in extra_cols:
-                fila_esp[col] = row_a.get(col)
-            filas.append(fila_esp)
+        fila_esp: dict[str, Any] = {
+            "OBRA_PRONTO": op,
+            "DESCRIPCION_OBRA": str(row_a.get("DESCRIPCION_OBRA", "")),
+            "GERENCIA": str(row_a.get("GERENCIA", "")),
+            "COMPENSABLE": str(row_a.get("COMPENSABLE", "")),
+        }
+        for col in extra_cols:
+            fila_esp[col] = row_a.get(col)
+        filas.append(fila_esp)
 
     df_nuevo = pd.DataFrame(filas, columns=cols_actuales)
     return df_nuevo, novedades
+
+
+# ── Sincronización PostgreSQL ────────────────────────────────────────────────
+
+
+def _sincronizar_postgres(
+    loockups: Path,
+    novedades_nuevas: int,
+    dry_run: bool,
+) -> None:
+    """
+    Llama a dim_loader del Pose_DataPipeline para sincronizar
+    dim_obras_gerencias en PostgreSQL después de actualizar Loockups.xlsx.
+
+    Se ejecuta siempre que haya novedades o en la primera carga.
+    En dry-run solo reporta sin ejecutar.
+    """
+    if dry_run:
+        log.info(
+            "[DRY-RUN] Se sincronizaría dim_obras_gerencias en PostgreSQL."
+        )
+        return
+
+    python = _DATAPIPELINE_VENV_PYTHON
+    if not python.exists():
+        log.warning(
+            "Pose_DataPipeline venv no encontrado: %s\n"
+            "dim_obras_gerencias NO sincronizado en PostgreSQL.",
+            python,
+        )
+        return
+
+    log.info(
+        "Sincronizando dim_obras_gerencias en PostgreSQL "
+        "(%d novedades detectadas)...",
+        novedades_nuevas,
+    )
+    resultado = subprocess.run(
+        [str(python), "-m", "src.etl.dim_loader"],
+        cwd=str(_DATAPIPELINE_DIR),
+        capture_output=True,
+        text=True,
+    )
+    if resultado.returncode == 0:
+        log.info("dim_obras_gerencias sincronizado OK.")
+        if resultado.stdout.strip():
+            for linea in resultado.stdout.strip().splitlines():
+                log.info("  [DataPipeline] %s", linea)
+    else:
+        log.error(
+            "Error sincronizando dim_obras_gerencias:\n%s",
+            resultado.stderr.strip() or resultado.stdout.strip(),
+        )
 
 
 # ── Escritura ────────────────────────────────────────────────────────────────
@@ -364,8 +435,17 @@ def _log_novedades(novedades: list[dict[str, Any]]) -> None:
     if not novedades:
         log.info("Sin novedades en %s.", HOJA_OBRAS)
         return
-    log.info("Novedades detectadas: %d", len(novedades))
-    for n in novedades:
+    # SIN_PRONTO: históricas/manuales — solo resumen, no accionables
+    sin_pronto = [n for n in novedades if n["tipo"] == "SIN_PRONTO"]
+    accionables = [n for n in novedades if n["tipo"] != "SIN_PRONTO"]
+    if sin_pronto:
+        log.info(
+            "  [SIN_PRONTO] %d obras en Loockups sin registro en"
+            " ProntoNet (históricas o cargadas a mano) — se preservan.",
+            len(sin_pronto),
+        )
+    log.info("Novedades accionables: %d", len(accionables))
+    for n in accionables:
         log.info(
             "  [%s] %s — %s",
             n["tipo"],
@@ -422,6 +502,10 @@ def run(
     except Exception as exc:
         log.error("Error escribiendo Loockups.xlsx: %s", exc)
         return 1
+
+    # ── Sincronizar PostgreSQL ────────────────────────────────────────────
+    nuevas = sum(1 for n in novedades if n["tipo"] == "NUEVA")
+    _sincronizar_postgres(_loock, nuevas, dry_run)
 
     log.info("=== Fin actualización ===")
     return 0
