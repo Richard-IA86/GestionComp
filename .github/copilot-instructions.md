@@ -21,7 +21,6 @@
 
 ---
 
-
 # Principio Operativo #2 — GIT: PROHIBIDO PUSH AUTÓNOMO
 
 > **NINGÚN agente puede hacer `git push` sin aprobación explícita del usuario.**
@@ -52,7 +51,7 @@ conflictos.
 
 ## Flujo correcto al cierre de jornada
 
-```
+```text
 1. black + flake8 + mypy + pytest → todo verde
 2. git add -A
 3. git commit -m "descripción"
@@ -177,25 +176,15 @@ triggers explícitos del desarrollador. No en ningún otro momento.
 
 ### Trigger: "inicio de jornada"
 
-1. Leer `config/estado_proyecto.json` → sección `jornada.fin`
-   (archivos locales — estado al cierre de ayer).
-2. Ejecutar `git fetch origin` (NO `git pull`) para ver el estado
-   remoto **sin modificar el árbol local**.
-3. Ejecutar `git status` y `git log --oneline -5` para detectar
-   si hay divergencia antes de tocar nada.
-4. Reportar al desarrollador:
-   - `tareas_pendientes_manana` (lo que quedó pendiente ayer)
-   - `notas_qa` (observación del cierre anterior)
-   - `estado_pipeline` (VERDE / AMARILLO / ROJO)
-   - Resultado del fetch: cuántos commits nuevos hay en origin (si los hay)
-   - Si hay divergencia: **STOP — informar y pedir instrucciones**.
-     NO hacer `git pull`, `git merge` ni `git rebase` de forma autónoma.
-5. **No modificar el archivo en este trigger.**
-
-> **¿Por qué `fetch` y no `pull`?**
-> `git pull` con commits locales hace un merge silencioso y puede
-> generar divergencias o conflictos sin aviso. `git fetch` solo
-> descarga metadata — el desarrollador decide cómo integrar.
+1. Leer directamente el reporte consolidado diario en `/home/richard/Dev/auditoria_ecosauron/logs/novedades_diarias.md`.
+2. Si el **Semáforo Global es ROJO**, detenerse y alertar al usuario inmediatamente.
+3. Si está en VERDE/AMARILLO, reportar un breve resumen de tareas pendientes para el repositorio actual de acuerdo al documento.
+4. **Actualizar el documento de Sprint/Backlog local** (p. ej. `TASKS.md` o
+   backlog) con el plan de acción del día, estructurando las novedades
+   extraídas y preguntando al usuario con qué iniciar.
+5. **No modificar ningún otro archivo ni ejecutar comandos Git (como pull)
+   en este trigger**, ya que el agente Crew se encarga de la sincronización
+   automatizada en segundo plano.
 
 ### Trigger: "fin de jornada"
 
