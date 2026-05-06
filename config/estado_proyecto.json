@@ -1,14 +1,17 @@
 {
+    "schema_version": "1.0",
+    "repo": "gestion_comp",
+    "ultima_actualizacion": "2026-05-06",
     "auditoria_qa": [
         {
             "fecha": "2026-04-16",
-            "herramientas": {
-                "black": "OK",
-                "flake8": "OK",
-                "mypy": "OK",
-                "pytest": "36/36 passed"
-            },
-            "estado_pipeline": "VERDE"
+            "resultado": "APROBADO",
+            "hallazgos": [
+                "black: OK",
+                "flake8: OK",
+                "mypy: OK",
+                "pytest: 36/36 passed"
+            ]
         }
     ],
     "desarrollo_local": {
@@ -35,8 +38,7 @@
             "Rebase sobre 14 commits remotos de agentes autónomos + resolución de conflictos",
             "Documentación protocolo: prohibición git push autónomo",
             "Documentación protocolo: inicio de jornada usa git fetch (no pull)"
-        ],
-        "fecha_ultima_actualizacion": "2026-05-02"
+        ]
     },
     "reglas_negocio": [
         {
