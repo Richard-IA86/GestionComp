@@ -6,6 +6,70 @@ Persiste los datos transformados en el destino final:
   - Archivo CSV de salida.
   - Archivo Excel de salida.
   - Registro de rechazos en archivo de auditoría.
+
+Esquema BD destino (PostgreSQL — base de datos: gestion_comp)
+──────────────────────────────────────────────────────────────
+
+  cuenta_corriente
+    comp            TEXT
+    numero          TEXT
+    ref             TEXT
+    fecha           DATE
+    fecha_vto       DATE
+    imp_orig        NUMERIC(18, 2)
+    saldo_comp      NUMERIC(18, 2)
+    saldo_trs       NUMERIC(18, 2)
+    fecha_cmp       DATE
+    mon_origen      TEXT
+    observaciones   TEXT
+
+  listado_ordenes
+    fecha_orden_pago        DATE
+    fecha_vencimiento_max   DATE
+    entidad                 TEXT
+    centro_costos           TEXT
+    numero_orden_pago       TEXT
+    numero_valor            TEXT
+    importe                 NUMERIC(18, 2)
+    fecha_valor             DATE
+
+  ordenes_pago
+    numero          TEXT    PRIMARY KEY
+    fecha_pago      DATE
+    tipo            TEXT
+    estado          TEXT
+    proveedor       TEXT
+    cuenta          TEXT
+    moneda          TEXT
+    efectivo        NUMERIC(18, 2)
+    descuentos      NUMERIC(18, 2)
+    valores         NUMERIC(18, 2)
+    documentos      NUMERIC(18, 2)
+    acreedores      NUMERIC(18, 2)
+    obra            TEXT
+    observaciones   TEXT
+    fecha_ingreso   DATE
+    fecha_modif     DATE
+    anulado         TEXT
+    fecha_anulacion DATE
+
+  obras
+    numero              TEXT    PRIMARY KEY
+    tipo_obra           TEXT
+    descripcion         TEXT
+    cliente             TEXT
+    fecha_inicio        DATE
+    fecha_entrega       DATE
+    fecha_finalizacion  DATE
+    unidad_operativa    TEXT
+    jefe_obra           TEXT
+    jefe_regional       TEXT
+    activa              BOOLEAN
+    jerarquia_contable  TEXT
+    valor_obra          NUMERIC(18, 2)
+    regimen_minero      TEXT
+
+Mapeo: aplicar normalizar_columnas() de Transformacion antes de cargar.
 """
 
 import logging

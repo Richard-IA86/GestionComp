@@ -51,27 +51,22 @@
     ],
     "jornada": {
         "fin": {
-            "fecha": "2026-05-04",
+            "fecha": "2026-05-07",
             "tareas_completadas": [
-                "Auditoría completa de scripts/actualizar_obras_gerencias.py",
-                "Confirmado: script COMPLETO, integrado en main.py como Paso 1b",
-                "Confirmado: lee Obras - Pronto Hist.xlsx + asignacion_gerencias.xlsx del Director",
-                "Confirmado: escribe hoja Obras_Gerencias en Loockups.xlsx (FAT32)",
-                "Identificadas 4 brechas para cerrar el loop con el dashboard B53",
-                "fix: TypeError sorted() float vs str en _leer_obras_gerencias (NaN en OBRA_PRONTO)",
-                "fix: preservar obras históricas pre-ProntoNet (RN-001) — SIN_PRONTO no borra",
-                "feat: dim_loader.py + pipeline.py en Pose_DataPipeline",
-                "feat: b53.py con JOIN dim_obras_gerencias en Pose_API",
-                "feat: _sincronizar_postgres() en actualizar_obras_gerencias.py"
+                "T1: procesar_cuenta_corriente(), procesar_listado_ordenes(), procesar_ordenes_pago(), procesar_obras() con columnas reales de ProntoNet",
+                "T1: fix header=1 en cargar_archivos() — título decorativo en fila 1, headers reales en fila 2",
+                "T1: parse de fechas dayfirst=True, normalización numérica (punto=miles, coma=decimal)",
+                "T3: flag --con-etl en main.py — Paso 4/4 ETL deshabilitado por defecto",
+                "T5: esquema BD destino documentado en src/etl/carga.py (4 tablas: cuenta_corriente, listado_ordenes, ordenes_pago, obras)"
             ],
             "tareas_pendientes_manana": [
-                "Ejecutar sin --dry-run y verificar escritura real en Loockups.xlsx",
-                "Test real con conexión PostgreSQL DEV (dim_obras_gerencias)",
-                "QA: tests/test_actualizar_obras_gerencias.py con fixtures sin FAT32",
-                "Verificar deploy en producción: www.gestionpose.com.ar"
+                "T4: Conseguir URL real de Gastos.xlsx en ProntoNet y activar descarga",
+                "Ejecutar scraper completo --solo-procesar y verificar DataFrames resultantes",
+                "Definir y crear tablas PostgreSQL destino (según esquema en carga.py)",
+                "Activar Paso 4/4 ETL con --con-etl una vez schema BD confirmado"
             ],
-            "notas_qa": "RN-001 registrada. Dry-run OK: 582 filas (434 ProntoNet + 148 históricas), 11 COMPENSABLE_CAMBIO accionables. Listo para ejecución real.",
-            "estado_pipeline": "VERDE"
+            "notas_qa": "Columnas reales de ProntoNet verificadas con openpyxl directo (venv numpy incompatible Python 3.14 vs 3.13). Sintaxis OK (py_compile). Pendiente ejecutar con venv funcional.",
+            "estado_pipeline": "AMARILLO"
         }
     }
 }

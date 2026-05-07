@@ -42,6 +42,16 @@ def parsear_argumentos() -> argparse.Namespace:
         default=None,
         help="Fecha de referencia en formato YYYY-MM-DD (default: hoy)",
     )
+    parser.add_argument(
+        "--con-etl",
+        action="store_true",
+        help=(
+            "Ejecuta Paso 4/4 (pipeline ETL genérico). "
+            "Deshabilitado por default: requiere que las columnas del "
+            "archivo incluyan 'valor' y que el esquema BD esté definido "
+            "en src/etl/carga.py y variables DB_* en .env."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -142,31 +152,44 @@ def main() -> int:
     reporte = generar_resumen_excel(datos, fecha=fecha)
 
     # ── 4. ETL Pipeline ──────────────────────────────────────────────────────
-    logger.info("Paso 4/4 — ETL: transformación y carga de variables")
-    from config.settings import ARCHIVOS_ESPERADOS, INPUT_RAW_DIR
-    from src.etl.pipeline import Pipeline as ETLPipeline
+    # Deshabilitado por default. Activar con --con-etl cuando:
+    #   - El esquema BD esté creado (ver docstring de src/etl/carga.py).
+    #   - Las variables DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+    #     estén definidas en .env.
+    #   - Los archivos tengan la columna 'valor' esperada por la
+    #     transformación genérica, o se haya adaptado la transformación.
+    if not args.con_etl:
+        logger.info(
+            "Paso 4/4 — ETL omitido (usar --con-etl para activarlo)"
+        )
+    else:
+        logger.info("Paso 4/4 — ETL: transformación y carga de variables")
+        from config.settings import ARCHIVOS_ESPERADOS, INPUT_RAW_DIR
+        from src.etl.pipeline import Pipeline as ETLPipeline
 
-    etl = ETLPipeline()
-    fecha_str = fecha.strftime("%Y%m%d")
-    for nombre in ARCHIVOS_ESPERADOS:
-        ruta_archivo = INPUT_RAW_DIR / nombre
-        if not ruta_archivo.exists():
-            logger.debug(f"ETL: archivo no encontrado, omitido: {nombre}")
-            continue
-        logger.info(f"ETL procesando: {nombre}")
-        try:
-            stats = etl.ejecutar(
-                fuente="excel",
-                archivo=str(ruta_archivo),
-                fecha=fecha_str,
-            )
-            logger.info(
-                f"  válidos={stats['registros_validos']}"
-                f" rechazados={stats['registros_rechazados']}"
-                f" → {stats['ruta_salida']}"
-            )
-        except Exception as exc:
-            logger.warning(f"ETL falló para '{nombre}': {exc}")
+        etl = ETLPipeline()
+        fecha_str = fecha.strftime("%Y%m%d")
+        for nombre in ARCHIVOS_ESPERADOS:
+            ruta_archivo = INPUT_RAW_DIR / nombre
+            if not ruta_archivo.exists():
+                logger.debug(
+                    f"ETL: archivo no encontrado, omitido: {nombre}"
+                )
+                continue
+            logger.info(f"ETL procesando: {nombre}")
+            try:
+                stats = etl.ejecutar(
+                    fuente="excel",
+                    archivo=str(ruta_archivo),
+                    fecha=fecha_str,
+                )
+                logger.info(
+                    f"  válidos={stats['registros_validos']}"
+                    f" rechazados={stats['registros_rechazados']}"
+                    f" → {stats['ruta_salida']}"
+                )
+            except Exception as exc:
+                logger.warning(f"ETL falló para '{nombre}': {exc}")
 
     logger.success("═══ Proceso completado exitosamente ═══")
     logger.info(f"  Informe de dirección : {informe}")
