@@ -71,9 +71,22 @@ _FAT32_COMMON = Path(_FAT32_ENV) if _FAT32_ENV else _INPUT_RAW_DIR
 _LOOCKUPS_DEFAULT = _FAT32_COMMON / "Loockups.xlsx"
 _ASIGNACION_DEFAULT = _FAT32_COMMON / "asignacion_gerencias.xlsx"
 
-# ── Pose_DataPipeline — sincronización automática ────────────────────────────
-_DATAPIPELINE_DIR = Path("/home/richard/Dev/Pose_DataPipeline")
-_DATAPIPELINE_VENV_PYTHON = _DATAPIPELINE_DIR / "venv/bin/python"
+# DATAPIPELINE_DIR en .env apunta al repo según la máquina.
+# M1 (Linux): /home/richard/Dev/Pose_DataPipeline
+# M2 (Windows): C:\Dev\Pose_DataPipeline
+_DATAPIPELINE_DIR = Path(
+    os.environ.get(
+        "DATAPIPELINE_DIR",
+        "/home/richard/Dev/Pose_DataPipeline",
+    )
+)
+# Ejecutable del venv varía por SO:
+# Linux → venv/bin/python | Windows → venv/Scripts/python.exe
+_VENV_PYTHON_WIN = _DATAPIPELINE_DIR / "venv" / "Scripts" / "python.exe"
+_VENV_PYTHON_LINUX = _DATAPIPELINE_DIR / "venv" / "bin" / "python"
+_DATAPIPELINE_VENV_PYTHON = (
+    _VENV_PYTHON_WIN if _VENV_PYTHON_WIN.exists() else _VENV_PYTHON_LINUX
+)
 
 HOJA_OBRAS = "Obras_Gerencias"
 GERENCIA_SIN_ASIGNAR = "SIN ASIGNAR"
