@@ -21,6 +21,49 @@
 
 ---
 
+# Principio Operativo: Rutas Externas — NO NEGOCIABLE
+
+> **"Ninguna ruta de dispositivo externo puede aparecer hardcodeada en código."**
+
+## Regla
+
+Está **PROHIBIDO** escribir en código rutas absolutas que dependan de hardware
+externo o de la máquina del desarrollador:
+
+- ❌ `/media/richard/FAT32/...`
+- ❌ `/mnt/usb/...`
+- ❌ `C:\Users\richard\...`
+- ❌ `D:\Datos\...`
+
+## Patrón obligatorio
+
+Toda ruta a archivo externo DEBE resolverse en este orden de prioridad:
+
+1. **Variable de entorno** (`.env` / `os.environ.get()`):
+
+   ```python
+   _ruta = Path(os.environ.get("MI_RUTA_VAR", ""))
+   ```
+
+2. **Argumento CLI** (`--ruta /path/al/archivo`).
+3. **Fallback a carpeta local del proyecto** (`input_raw/`, `data/`, etc.)
+   como último recurso para trabajo offline.
+
+## Consecuencia de violación
+
+Si se detecta una ruta hardcodeada de dispositivo externo → **STOP**,
+no continuar. Refactorizar primero, luego proceder.
+
+## Caso documentado — 2026-05-07
+
+`scripts/actualizar_obras_gerencias.py` tenía hardcodeado:
+`/media/richard/FAT32/report_gerencias/input_raw/common`
+
+Corregido con `FAT32_COMMON_DIR` en `.env` + fallback a `input_raw/`.
+Commit: `2b3fd7d`.
+
+---
+
 # Principio Operativo #2 — GIT: PROHIBIDO PUSH AUTÓNOMO
 
 > **NINGÚN agente puede hacer `git push` sin aprobación explícita del usuario.**
