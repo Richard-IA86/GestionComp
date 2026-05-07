@@ -55,9 +55,7 @@ def _doble_clic_icono_escritorio() -> bool:
     Retorna True si encontró y clickeó el icono.
     """
     if not _FORTI_ICON_REF.exists():
-        logger.error(
-            f"Imagen de referencia no encontrada: {_FORTI_ICON_REF}"
-        )
+        logger.error(f"Imagen de referencia no encontrada: {_FORTI_ICON_REF}")
         return False
 
     # Matar instancias huérfanas previas
@@ -81,9 +79,7 @@ def _doble_clic_icono_escritorio() -> bool:
         pos = None
 
     if pos is None:
-        logger.error(
-            "No se encontró el icono FortiClient en el escritorio."
-        )
+        logger.error("No se encontró el icono FortiClient en el escritorio.")
         return False
 
     logger.info(
@@ -154,13 +150,9 @@ def _levantar_vpn_gui() -> bool:
         time.sleep(_ESPERA_TUNEL_POLL_S)
         transcurrido += _ESPERA_TUNEL_POLL_S
         if _vpn_activa():
-            logger.info(
-                f"Túnel activo tras {transcurrido} s."
-            )
+            logger.info(f"Túnel activo tras {transcurrido} s.")
             return True
-        logger.debug(
-            f"Túnel aún no disponible ({transcurrido}s)..."
-        )
+        logger.debug(f"Túnel aún no disponible ({transcurrido}s)...")
     return False
 
 
@@ -177,7 +169,6 @@ def asegurar_vpn() -> bool:
         logger.success("VPN activada correctamente.")
         return True
     logger.error(
-        "No se pudo establecer VPN. "
-        "Conectar manualmente con FortiClient."
+        "No se pudo establecer VPN. " "Conectar manualmente con FortiClient."
     )
     return False

@@ -69,9 +69,7 @@ def _hacer_login(page: Page) -> None:
     # expect_navigation captura la recarga de página que eso desencadena.
     # NO llamar page.evaluate(dispatchEvent) después — el contexto ya
     # fue destruido por la navegación.
-    with page.expect_navigation(
-        wait_until="networkidle", timeout=TIMEOUT_MS
-    ):
+    with page.expect_navigation(wait_until="networkidle", timeout=TIMEOUT_MS):
         page.select_option("#bdDropdown", value="1")
 
     _espera_humana(page, 2000, 3000)

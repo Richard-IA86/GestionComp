@@ -51,6 +51,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+import os
+
 import openpyxl
 import pandas as pd
 
@@ -62,7 +64,10 @@ _INPUT_RAW_DIR = _BASE_DIR / "input_raw"
 _OBRAS_PRONTO_DEFAULT = _INPUT_RAW_DIR / "Obras - Pronto Hist.xlsx"
 _LOGS_DIR = _BASE_DIR / "logs"
 
-_FAT32_COMMON = Path("/media/richard/FAT32/report_gerencias/input_raw/common")
+# FAT32_COMMON_DIR en .env permite apuntar a la unidad FAT32 cuando está
+# montada. Sin esa var, los archivos se leen desde input_raw/ local.
+_FAT32_ENV = os.environ.get("FAT32_COMMON_DIR", "")
+_FAT32_COMMON = Path(_FAT32_ENV) if _FAT32_ENV else _INPUT_RAW_DIR
 _LOOCKUPS_DEFAULT = _FAT32_COMMON / "Loockups.xlsx"
 _ASIGNACION_DEFAULT = _FAT32_COMMON / "asignacion_gerencias.xlsx"
 

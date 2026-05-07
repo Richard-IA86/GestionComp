@@ -54,3 +54,9 @@ test-results/
 _temp_*.py
 _temp_*.sh
 
+# ─── Archivos fuente copiados localmente (no versionar) ──
+# Cuando se copian desde FAT32/M2 para trabajo offline
+input_raw/*.xlsx
+input_raw/*.xls
+input_raw/*.csv
+
