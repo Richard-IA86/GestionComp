@@ -159,24 +159,30 @@ def main() -> int:
     #   - Los archivos tengan la columna 'valor' esperada por la
     #     transformación genérica, o se haya adaptado la transformación.
     if not args.con_etl:
-        logger.info(
-            "Paso 4/4 — ETL omitido (usar --con-etl para activarlo)"
-        )
+        logger.info("Paso 4/4 — ETL omitido (usar --con-etl para activarlo)")
     else:
-        logger.info("Paso 4/4 — ETL: transformación y carga de variables")
-        from config.settings import ARCHIVOS_ESPERADOS, INPUT_RAW_DIR
+        logger.info("Paso 4/4 — ETL: carga de variables guiada por Registry")
+        from config.settings import INPUT_RAW_DIR
+        from config.registry_reportes import REGISTRY_REPORTES
         from src.etl.pipeline import Pipeline as ETLPipeline
 
         etl = ETLPipeline()
         fecha_str = fecha.strftime("%Y%m%d")
-        for nombre in ARCHIVOS_ESPERADOS:
-            ruta_archivo = INPUT_RAW_DIR / nombre
+
+        for key_reporte, config_reporte in REGISTRY_REPORTES.items():
+            if not config_reporte.get("activo", False):
+                continue
+
+            nombre_archivo = config_reporte["archivo_esperado"]
+            ruta_archivo = INPUT_RAW_DIR / nombre_archivo
+
             if not ruta_archivo.exists():
                 logger.debug(
-                    f"ETL: archivo no encontrado, omitido: {nombre}"
+                    f"ETL: archivo no encontrado, omitido: {nombre_archivo}"
                 )
                 continue
-            logger.info(f"ETL procesando: {nombre}")
+
+            logger.info(f"ETL procesando: {key_reporte} ({nombre_archivo})")
             try:
                 stats = etl.ejecutar(
                     fuente="excel",
@@ -189,7 +195,7 @@ def main() -> int:
                     f" → {stats['ruta_salida']}"
                 )
             except Exception as exc:
-                logger.warning(f"ETL falló para '{nombre}': {exc}")
+                logger.warning(f"ETL falló para '{key_reporte}': {exc}")
 
     logger.success("═══ Proceso completado exitosamente ═══")
     logger.info(f"  Informe de dirección : {informe}")

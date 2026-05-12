@@ -66,15 +66,14 @@ def procesar_cuenta_corriente(df: pd.DataFrame) -> pd.DataFrame:
     cols_fecha = ["Fecha", "Fecha vto.", "Fecha cmp."]
     for col in cols_fecha:
         if col in df.columns:
-            df[col] = pd.to_datetime(
-                df[col], dayfirst=True, errors="coerce"
-            )
+            df[col] = pd.to_datetime(df[col], dayfirst=True, errors="coerce")
 
     cols_num = ["Imp.orig.", "Saldo Comp.", "SaldoTrs"]
     for col in cols_num:
         if col in df.columns:
             df[col] = pd.to_numeric(
-                df[col].astype(str)
+                df[col]
+                .astype(str)
                 .str.replace(".", "", regex=False)
                 .str.replace(",", ".", regex=False),
                 errors="coerce",
@@ -127,9 +126,7 @@ def procesar_ordenes_pago(df: pd.DataFrame) -> pd.DataFrame:
     ]
     for col in cols_fecha:
         if col in df.columns:
-            df[col] = pd.to_datetime(
-                df[col], dayfirst=True, errors="coerce"
-            )
+            df[col] = pd.to_datetime(df[col], dayfirst=True, errors="coerce")
 
     cols_num = [
         "Efectivo",
@@ -149,7 +146,8 @@ def procesar_ordenes_pago(df: pd.DataFrame) -> pd.DataFrame:
     for col in cols_num:
         if col in df.columns:
             df[col] = pd.to_numeric(
-                df[col].astype(str)
+                df[col]
+                .astype(str)
                 .str.replace(".", "", regex=False)
                 .str.replace(",", ".", regex=False),
                 errors="coerce",
@@ -178,13 +176,12 @@ def procesar_listado_ordenes(df: pd.DataFrame) -> pd.DataFrame:
     cols_fecha = ["Fecha Orden Pago", "Fecha Vencimiento Max", "Fecha Valor"]
     for col in cols_fecha:
         if col in df.columns:
-            df[col] = pd.to_datetime(
-                df[col], dayfirst=True, errors="coerce"
-            )
+            df[col] = pd.to_datetime(df[col], dayfirst=True, errors="coerce")
 
     if "Importe" in df.columns:
         df["Importe"] = pd.to_numeric(
-            df["Importe"].astype(str)
+            df["Importe"]
+            .astype(str)
             .str.replace(".", "", regex=False)
             .str.replace(",", ".", regex=False),
             errors="coerce",
@@ -213,13 +210,12 @@ def procesar_obras(df: pd.DataFrame) -> pd.DataFrame:
     cols_fecha = ["Fecha inicio", "Fecha entrega", "Fecha finalizacion"]
     for col in cols_fecha:
         if col in df.columns:
-            df[col] = pd.to_datetime(
-                df[col], dayfirst=True, errors="coerce"
-            )
+            df[col] = pd.to_datetime(df[col], dayfirst=True, errors="coerce")
 
     if "Valor obra" in df.columns:
         df["Valor obra"] = pd.to_numeric(
-            df["Valor obra"].astype(str)
+            df["Valor obra"]
+            .astype(str)
             .str.replace(".", "", regex=False)
             .str.replace(",", ".", regex=False),
             errors="coerce",
@@ -249,32 +245,30 @@ def procesar_obras(df: pd.DataFrame) -> pd.DataFrame:
 
 def enriquecer_datos() -> dict[str, pd.DataFrame]:
     """
-    Carga todos los archivos raw, aplica las transformaciones correspondientes
-    y devuelve un dict con los DataFrames enriquecidos.
+    Carga de archivos guiada por registry, aplica las transformaciones
+    y devuelve un dict con los DataFrames enriquecidos mapeado a sus llaves.
     """
-    logger.info("Iniciando enriquecimiento de datos...")
+    logger.info("Iniciando enriquecimiento (guiado por Registry)...")
     raw = cargar_archivos()
     resultado: dict[str, pd.DataFrame] = {}
+    # Procesadores asociados a sus llaves de registry
+    procesadores = {
+        "cuenta_corriente": procesar_cuenta_corriente,
+        "gastos": procesar_gastos,
+        "detallado_ordenes_pago": procesar_listado_ordenes,
+        "ordenes_pago": procesar_ordenes_pago,
+        "obras_activas": procesar_obras,
+    }
 
-    for clave, df in raw.items():
-        clave_lower = clave.lower()
-        if "cuenta corriente" in clave_lower:
-            resultado["cuenta_corriente"] = procesar_cuenta_corriente(df)
-        elif "gasto" in clave_lower:
-            resultado["gastos"] = procesar_gastos(df)
-        elif "listado" in clave_lower and (
-            "orden" in clave_lower or "órdenes" in clave_lower
-        ):
-            resultado["listado_ordenes"] = procesar_listado_ordenes(df)
-        elif "orden" in clave_lower or "órdenes" in clave_lower:
-            resultado["ordenes_pago"] = procesar_ordenes_pago(df)
-        elif "obra" in clave_lower:
-            resultado["obras"] = procesar_obras(df)
+    for key, df in raw.items():
+        if key in procesadores:
+            logger.info(f"  → Transformando: {key}")
+            resultado[key] = procesadores[key](df)
         else:
-            resultado[clave] = df
             logger.warning(
-                f"  Reporte sin transformación específica: '{clave}'"
+                f"  → Reporte sin transformación especifica: '{key}'"
             )
+            resultado[key] = df
 
     logger.success(f"Enriquecimiento completo: {list(resultado.keys())}")
     return resultado
