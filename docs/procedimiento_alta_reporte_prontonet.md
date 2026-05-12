@@ -88,90 +88,94 @@ Si podés, adjuntar las siguientes capturas para acelerar la implementación:
 
 ## Sección 4 — Referencia técnica (solo para el desarrollador)
 
-Una vez recibido el formulario, el desarrollador determina el tipo de
-implementación:
+Una vez recibido el formulario, el desarrollador aplica el patrón de arquitectura **Registry Reportes** (no hay recuento ciego, todo es explícito).
 
-### Árbol de decisión
+### Paso 1: Registrar el reporte en el Registry
 
-```
-¿Tiene filtros especiales (fechas, checkboxes, dropdowns)?
-│
-├── NO → Reporte simple
-│         Agregar a la lista REPORTES en scraper.py:
-│         ("URL_relativa", "Nombre archivo.xlsx")
-│
-└── SÍ → Reporte especial
-          Crear función dedicada en scraper.py:
-          def _descargar_<nombre>(page, nombre_destino): ...
-          Llamarla desde descargar_todos_los_reportes()
-```
-
-### Plantilla — Reporte simple
+En `config/registry_reportes.py`, agregar un nuevo bloque a `REGISTRY_REPORTES`:
 
 ```python
-# En scraper.py → lista REPORTES
-REPORTES = [
-    # ... existentes ...
-    ("/URL/Del/Reporte", "Nombre Archivo - Pronto.xlsx"),
-]
+    "nuevo_reporte": {
+        "archivo_esperado": "El Archivo Descargado - Pronto.xlsx",
+        "activo": True,
+        "tabla_bd_destino": "compensaciones.tabla_destino",
+        "funcion_scraper": "descargar_nuevo_reporte",
+        "columnas_esperadas": ["Columna 1", "Columna 2"],
+    },
 ```
 
-### Plantilla — Reporte especial con filtros
+### Paso 2: Implementar la extracción (Árbol de decisión en `scraper.py`)
+
+Dependiendo de los filtros marcados en el formulario:
+
+**A. Reporte Simple (Sin filtros, exportación directa)**
+Agregar la URL al diccionario `URLS_ESTANDAR` dentro de la función `descargar_todos_los_reportes()` usando el mismo alias que en el registry:
 
 ```python
-def _descargar_<nombre>(
-    page: Page, nombre_destino: Path
-) -> None:
-    """Descarga el reporte <Nombre> con filtros específicos."""
+    URLS_ESTANDAR = {
+        # ... otros ...
+        "descargar_nuevo_reporte": "http://10.2.1.81/URL/Fija/Del/Reporte",
+    }
+```
+Esto utilizará la función genérica `_descargar_archivo()`.
+
+**B. Reporte Especial (Con fechas, dropdowns, DataTables)**
+Crear una función privada e invocarla en el clasificador iterativo de `descargar_todos_los_reportes()`:
+
+```python
+def _descargar_nuevo_reporte(page: Page, nombre_destino: str) -> Path:
     page.goto(f"{APP_URL}/URL/Del/Reporte")
     page.wait_for_load_state("networkidle")
-
-    # Ejemplo: dropdown de estado
-    # page.select_option("#idDelDropdown", "valorDeOpcion")
-
-    # Ejemplo: checkbox
-    # page.check("#idDelCheckbox")
-
-    # Ejemplo: rango de fechas
-    # page.fill("#filtroFechaDesde", "01/04/2026")
-    # page.fill("#filtroFechaHasta", fecha_hoy)
-
-    # Botón actualizar (si existe)
-    # page.click("#botonActualizar")
-    # page.wait_for_load_state("networkidle")
-
-    # Seleccionar "Todos" en DataTables
-    page.select_option("select[name$='_length']", "-1")
-    page.wait_for_load_state("networkidle")
-
-    # Exportar a Excel
+    
+    # Manejar filtros, dropdowns, checkboxes
+    # page.select_option("#idDelDropdown", "valor")
+    
+    # Exportar y descargar
     with page.expect_download() as dl:
         page.click("button.buttons-excel")
-    dl.value.save_as(nombre_destino)
-    logger.info("Descargado: %s", nombre_destino.name)
+    
+    ruta_destino = RUTA_DESCARGA / nombre_destino
+    dl.value.save_as(ruta_destino)
+    return ruta_destino
+```
+Añadir el bloque `elif` al bucle de descargas en `descargar_todos_los_reportes()`:
+```python
+    elif funcion == "descargar_nuevo_reporte":
+        ruta = _descargar_nuevo_reporte(page, nombre)
+```
+
+### Paso 3: Enrutador de procesamiento
+
+En `src/procesamiento/enriquecimiento.py`, registrar formalmente la función de procesamiento en el diccionario `procesadores` en función del ID del Registry:
+
+```python
+    procesadores = {
+        # El nombre del archivo se recupera del registry
+        REGISTRY_REPORTES["nuevo_reporte"]["archivo_esperado"]: procesar_nuevo_reporte,
+    }
 ```
 
 ### Checklist de validación post-implementación
 
-- [ ] El archivo aparece en `input_raw/` con el nombre correcto.
-- [ ] El archivo pesa más de 5 KB (no está vacío).
-- [ ] Se puede abrir en Excel sin error.
-- [ ] `enriquecimiento.py` lo reconoce por nombre de archivo
-      (o se agregó la rama correspondiente).
-- [ ] `config/settings.py` → `ARCHIVOS_ESPERADOS` actualizado.
-- [ ] Se ejecutó `main.py --solo-procesar` y el pipeline completa sin error.
+- [ ] Nueva entrada configurada en `REGISTRY_REPORTES`.
+- [ ] Función (o URL estándar) añadida correctamente en `scraper.py`.
+- [ ] Función de procesamiento asociada en `procesadores` (`enriquecimiento.py`).
+- [ ] El archivo tiene las columnas mínimas registradas en `columnas_esperadas`.
+- [ ] `python3 main.py --solo-procesar` ejecuta el ciclo sin errores para los reportes mockeados en `input_raw/`.
 
 ---
 
-## Sección 5 — Reportes actualmente configurados
+## Sección 5 — Reportes actualmente configurados (vía Registry)
 
-| Archivo descargado | Tipo | Función en scraper.py |
+El sistema ahora está desacoplado y gobernado por `config/registry_reportes.py`. Los tipos actualmente soportados en `scraper.py` son:
+
+| Alias (`funcion_scraper`) | Tipo según scraper.py | Mecanismo |
 |---|---|---|
-| `Listado Detallado de Órdenes de Pago - Pronto.xlsx` | Simple | `REPORTES` lista |
-| `Ordenes de Pago - Pronto.xlsx` | Simple | `REPORTES` lista |
-| `Cuenta Corriente Proveedores - Pronto.xlsx` | Especial | `_descargar_cuenta_corriente()` |
-| `Obras - Pronto Hist.xlsx` | Especial | `_descargar_obras()` |
-| `Gastos.xlsx` | Especial (opcional) | `GASTOS_URL` en `.env` |
+| `descargar_detallado_ordenes_pago` | Simple | `URLS_ESTANDAR` estático |
+| `descargar_ordenes_pago` | Simple | `URLS_ESTANDAR` estático |
+| `descargar_cuenta_corriente` | Especial | `_descargar_cuenta_corriente()` |
+| `descargar_obras` | Especial | `_descargar_obras()` |
+| `descargar_gastos` | Simple | `URLS_ESTANDAR` estático |
 
 ---
 
