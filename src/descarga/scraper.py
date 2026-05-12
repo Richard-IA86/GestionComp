@@ -23,6 +23,7 @@ from config.settings import (
     TIMEOUT_MS,
     RUTA_DESCARGA,
 )
+from config.registry_reportes import REGISTRY_REPORTES
 
 
 import random
@@ -274,34 +275,24 @@ def descargar_todos_los_reportes(
 ) -> list[Path]:
     """
     Abre el navegador, hace login, selecciona la empresa
-    y descarga todos los reportes.
-    Las fechas se dejan por defecto (el sistema las pre-carga automáticamente).
+    y descarga dinámicamente los reportes activos del registry.
+    Las fechas se dejan por defecto salvo en flujos especiales.
     """
     if fecha_hasta is None:
         fecha_hasta = date.today()
 
-    # ── Definir reportes a descargar ─────────────────────────────────────────
-    # Cada entrada: (url_relativa_al_login, nombre_archivo_destino)
-    REPORTES = [
-        (
-            "http://10.2.1.81/Consulta/ProveedoresListadoOrdenesPagoDetallado3",  # noqa: E501
-            "Listado Detallado de Órdenes de Pago - Pronto.xlsx",
+    # Mapeo de la función lógica del registry a su URL en ProntoNet
+    URLS_ESTANDAR = {
+        "descargar_ordenes_pago": "http://10.2.1.81/OrdenPago/",
+        "descargar_detallado_ordenes_pago": (
+            "http://10.2.1.81/Consulta/ProveedoresListadoOrdenesPagoDetallado3"
         ),
-        (
-            "http://10.2.1.81/OrdenPago/",
-            "Ordenes de Pago - Pronto.xlsx",
-        ),
-        # Pendientes con URLs reales:
-        # (
-        #     "http://10.2.1.81/Reportes/Gastos",
-        #     "Gastos.xlsx",
-        # ),
-    ]
+        "descargar_gastos": "http://10.2.1.81/Reportes/Gastos",
+    }
 
     archivos_descargados: list[Path] = []
 
     with sync_playwright() as pw:
-        # Configuramos Chromium para evitar detección de bots
         browser = pw.chromium.launch(
             headless=HEADLESS,
             args=["--disable-blink-features=AutomationControlled"],
@@ -310,13 +301,17 @@ def descargar_todos_los_reportes(
         context = browser.new_context(
             accept_downloads=True,
             ignore_https_errors=True,
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",  # noqa: E501
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/123.0.0.0 Safari/537.36"
+            ),
             viewport={"width": 1366, "height": 768},
         )
 
-        # Ocultar webdriver mediante un script en cada página nueva
         context.add_init_script(
-            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"  # noqa: E501
+            "Object.defineProperty(navigator, 'webdriver', "
+            "{get: () => undefined})"
         )
 
         page = context.new_page()
@@ -324,29 +319,29 @@ def descargar_todos_los_reportes(
         try:
             _hacer_login(page)
 
-            for url_reporte, nombre in REPORTES:
-                ruta = _descargar_archivo(
-                    page,
-                    nav_url=url_reporte,
-                    nombre_destino=nombre,
-                )
+            for key, conf in REGISTRY_REPORTES.items():
+                if not conf["activo"]:
+                    continue
+
+                funcion = conf["funcion_scraper"]
+                nombre = str(conf["archivo_esperado"])
+
+                if funcion == "descargar_cuenta_corriente":
+                    ruta = _descargar_cuenta_corriente(page, nombre)
+                elif funcion == "descargar_obras":
+                    ruta = _descargar_obras(page, nombre)
+                elif funcion in URLS_ESTANDAR:
+                    ruta = _descargar_archivo(
+                        page,
+                        nav_url=URLS_ESTANDAR[funcion],
+                        nombre_destino=nombre,
+                    )
+                else:
+                    logger.warning(f"Función scraper desconocida: {funcion}")
+                    continue
+
                 archivos_descargados.append(ruta)
                 _espera_humana(page, 3000, 5000)
-
-            # Cuenta corriente: flujo especial con filtros propios
-            ruta_cc = _descargar_cuenta_corriente(
-                page,
-                nombre_destino="Cuenta corriente CONSTRUYA AL COSTO SRL - Pronto.xlsx",  # noqa: E501
-            )
-            archivos_descargados.append(ruta_cc)
-            _espera_humana(page, 3000, 5000)
-
-            # Obras: flujo especial con filtro de estado
-            ruta_obras = _descargar_obras(
-                page,
-                nombre_destino="Obras - Pronto Hist.xlsx",
-            )
-            archivos_descargados.append(ruta_obras)
 
         except Exception as exc:
             logger.error(f"Error durante la descarga: {exc}")

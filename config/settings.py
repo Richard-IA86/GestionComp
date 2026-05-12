@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+from config.registry_reportes import REGISTRY_REPORTES
+
 # ─── Rutas base ──────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -48,13 +50,11 @@ TIMEOUT_MS = 30_000  # 30 segundos por defecto para esperas Playwright
 _ruta_descarga = os.getenv("RUTA_DESCARGA", "")
 RUTA_DESCARGA = Path(_ruta_descarga) if _ruta_descarga else INPUT_RAW_DIR
 
-# ─── Archivos esperados (nombres como aparecen en el sistema) ────────────────
+# ─── Archivos esperados (Registro centralizado) ──────────────────────────────
 ARCHIVOS_ESPERADOS = [
-    "Cuenta corriente CONSTRUYA AL COSTO SRL - Pronto.xlsx",
-    "Gastos.xlsx",
-    "Listado Detallado de Órdenes de Pago - Pronto.xlsx",
-    "Obras - Pronto Hist.xlsx",
-    "Ordenes de Pago - Pronto.xlsx",
+    conf["archivo_esperado"]
+    for config_key, conf in REGISTRY_REPORTES.items()
+    if conf["activo"]
 ]
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
