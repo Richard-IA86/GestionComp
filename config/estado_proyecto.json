@@ -1,55 +1,57 @@
 {
-    "schema_version": "1.0",
-    "repo": "gestion_comp",
-    "ultima_actualizacion": "2026-05-11",
-    "auditoria_qa": [
-        {
-            "fecha": "2026-04-16",
-            "resultado": "APROBADO",
-            "hallazgos": [
-                "black: OK",
-                "flake8: OK",
-                "mypy: OK",
-                "pytest: 36/36 passed"
-            ]
-        }
-    ],
-    "desarrollo_local": {
-        "fecha_actualizacion": "2026-05-11",
-        "punto_de_partida_manana": "Analizar la arquitectura de ingesta de nuevos reportes (Opción 4 y 5 Híbridas) debido a solapamiento de headers en Loockups.",
-        "tareas_pendientes": [
-            "Conseguir URL de Gastos.xlsx e info de nuevos reportes de compensaciones",
-            "Definir estrategia de ingesta / reconocimiento de archivos (solucionar colisión identicos headers)",
-            "Adaptar Paso 4 crudo a BD usando el nuevo REGISTRY_REPORTES"
-        ],
-        "tareas_completadas": [
-            "Creación del config/registry_reportes.py para modularizar reportes esperados",
-            "Refactor de scraper.py: ahora itera sobre REGISTRY_REPORTES y ya no quema URLs en código",
-            "QA ejecutado: black, flake8, mypy pasaron en verde"
-        ]
-    },
-    "reglas_negocio": [
-        {
-            "id": "RN-001",
-            "fecha": "2026-05-04",
-            "titulo": "Obras históricas pre-ProntoNet — preservar siempre",
-            "descripcion": "El dataset arranca en 2019. Hasta ~2023 la operación se registraba en Excel sin ProntoNet (no existía la versión Net). Hay obras en Loockups.xlsx cargadas a mano que NUNCA tendrán contrapartida en ProntoNet. ProntoNet es fuente de verdad SOLO para obras activas. Toda obra en Loockups sin contrapartida en ProntoNet es histórica legítima y debe preservarse intacta. Tipo de novedad: SIN_PRONTO (informativa, sin acción requerida).",
-            "impacto": "_calcular_cambios(): bloque SIN_PRONTO preserva todas las filas del Loockups no presentes en ProntoNet, sin distinción numérico/no-numérico."
-        }
-    ],
-    "jornada": {
-        "fin": {
-            "fecha": "2026-05-11",
-            "tareas_completadas": [
-                "Configurado REGISTRY_REPORTES para desacoplar las definiciones de listados",
-                "Refactor de scraper.py para ingestar reportes dinámicamente según configuración"
-            ],
-            "tareas_pendientes_manana": [
-                "Definir y discutir la arquitectura de ingesta de archivos. Diseñar opciones 4 y 5 híbridas para evitar error 'Loockups' (mismos headers)",
-                "Probar flujo de archivos manuales vs automatizados"
-            ],
-            "notas_qa": "Se inició Sprint 1. El Ojo de Sauron preparó el andamiaje del diccionario de reportes. El diseño de enrutamiento se dejó pendiente por riesgo de colisión estructural.",
-            "estado_pipeline": "VERDE"
-        }
+  "schema_version": "1.0",
+  "repo": "gestion_comp",
+  "ultima_actualizacion": "2026-05-11",
+  "auditoria_qa": [
+    {
+      "fecha": "2026-04-16",
+      "resultado": "APROBADO",
+      "hallazgos": [
+        "black: OK",
+        "flake8: OK",
+        "mypy: OK",
+        "pytest: 36/36 passed"
+      ]
     }
+  ],
+  "desarrollo_local": {
+    "fecha_actualizacion": "2026-05-12",
+    "punto_de_partida_manana": "Esperar output de prueba M2 (Isindur).",
+    "tareas_pendientes": [
+      "Conseguir URL de Gastos.xlsx e info de nuevos reportes de compensaciones",
+      "Definir estrategia de ingesta / reconocimiento de archivos (solucionar colisión identicos headers)",
+      "Adaptar Paso 4 crudo a BD usando el nuevo REGISTRY_REPORTES"
+    ],
+    "tareas_completadas": [
+      "Creación del config/registry_reportes.py para modularizar reportes esperados",
+      "Refactor de scraper.py: ahora itera sobre REGISTRY_REPORTES y ya no quema URLs en código",
+      "QA ejecutado: black, flake8, mypy pasaron en verde"
+    ]
+  },
+  "reglas_negocio": [
+    {
+      "id": "RN-001",
+      "fecha": "2026-05-04",
+      "titulo": "Obras históricas pre-ProntoNet — preservar siempre",
+      "descripcion": "El dataset arranca en 2019. Hasta ~2023 la operación se registraba en Excel sin ProntoNet (no existía la versión Net). Hay obras en Loockups.xlsx cargadas a mano que NUNCA tendrán contrapartida en ProntoNet. ProntoNet es fuente de verdad SOLO para obras activas. Toda obra en Loockups sin contrapartida en ProntoNet es histórica legítima y debe preservarse intacta. Tipo de novedad: SIN_PRONTO (informativa, sin acción requerida).",
+      "impacto": "_calcular_cambios(): bloque SIN_PRONTO preserva todas las filas del Loockups no presentes en ProntoNet, sin distinción numérico/no-numérico."
+    }
+  ],
+  "jornada": {
+    "fin": {
+      "fecha": "2026-05-12",
+      "tareas_completadas": [
+        "Implementar Registry Reportes en procesamiento/enriquecimiento.py",
+        "Eliminar archivos duplicados (Opción 4 híbrida enrutamiento)",
+        "Limpieza de repositorios obsoletos del ecosistema",
+        "Refactor documentación ProntoNet"
+      ],
+      "tareas_pendientes_manana": [
+        "Que el agente M2 (Isindur) ejecute la prueba end-to-end completa con el pipeline de descarga de ProntoNet activado",
+        "Monitorear output real de base de datos vs Registry"
+      ],
+      "notas_qa": "Pipeline refactorizado a arquitectura Registry guiada. Archivos ahora enrutan por configuración y no adivinando columnas. Próxima prueba recae sobre Isindur en M2 para conexión real VPN y Playwright.",
+      "estado_pipeline": "VERDE"
+    }
+  }
 }

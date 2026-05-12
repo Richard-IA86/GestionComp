@@ -36,6 +36,12 @@
 
 ## Log de trabajo
 
+### 2026-05-12 (Plan del día)
+- [x] **Advertencias IR:** `WARN: Commits sin bajar` en `gestion_comp` (Resuelto con rebase).
+- [x] **Tarea 1:** Definir y discutir la arquitectura de ingesta. (Implementado Registry Reportes para enrutamiento seguro).
+- [x] **Tarea 2:** Probar flujo de archivos manuales vs automatizados. Testeado mock de arquitectura (`--solo-procesar`).
+- [x] **Tarea 3:** Actualización docs de ProntoNet a la nueva arquitectura.\n- **Cierre de jornada**: El usuario se retira al curso de análisis de datos a las 19:00 hs.
+
 ### 2026-04-20
 - **Inicio de jornada**: QA diario completo (black + flake8 + mypy + pytest)
 - black: 28 archivos sin cambios
