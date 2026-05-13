@@ -141,3 +141,11 @@ Antes de enviar, confirmar:
 - Aprobado por usuario solicitante:
 - Fecha:
 - Observaciones finales:
+
+---
+
+## 12) Feedback de la Prueba de Usuario (Uso interno tecnico)
+
+- Dudas o fricciones que tuvo el usuario al completar:
+- Respuestas no previstas / Casos borde descubiertos:
+- Ajustes a realizar en este formulario (para futuras iteraciones):
