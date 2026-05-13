@@ -1,5 +1,11 @@
 # Procedimiento A — Alta de Nuevo Reporte ProntoNet
 
+> Formulario para usuario no tecnico:
+> [docs/formulario_alta_reporte_prontonet.md](formulario_alta_reporte_prontonet.md)
+
+> Estado funcional: aprobado por el usuario (2026-05-12).
+> Validacion empirica en curso con usuario final.
+
 > **Para quién es esto:** Cualquier usuario que necesite solicitar la
 > automatización de un reporte nuevo de ProntoNet. No se requieren
 > conocimientos técnicos. Solo hay que responder las preguntas de

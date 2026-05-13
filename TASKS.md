@@ -3,6 +3,7 @@
 ## Backlog
 
 ### En curso
+- [ ] Proximo chat: prueba empirica de formulario de solicitud de reporte (usuario no tecnico)
 - [ ] Completar lógica de `src/procesamiento/enriquecimiento.py` con columnas reales (ver archivos en `input_raw/`)
 - [ ] Completar lógica de `src/reportes/generador.py` con formato final del informe de dirección
 
