@@ -38,6 +38,7 @@ for _dir in [
 APP_URL = os.getenv("APP_URL", "http://10.2.1.81/Account/Login")
 APP_USUARIO = os.getenv("APP_USUARIO", "")
 APP_PASSWORD = os.getenv("APP_PASSWORD", "")
+GASTOS_URL = os.getenv("GASTOS_URL", "").strip()
 
 # ─── Configuración del navegador ─────────────────────────────────────────────
 MODO_NAVEGADOR = os.getenv(

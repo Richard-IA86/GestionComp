@@ -126,32 +126,43 @@ def _leer_obras_pronto(ruta: Path) -> pd.DataFrame:
             f"Obras - Pronto Hist.xlsx no encontrado: {ruta}\n"
             "Ejecutar primero GestionComp para descargarlo."
         )
-    df = pd.read_excel(ruta)
-    df.columns = [str(c).strip() for c in df.columns]
-    df = df.dropna(how="all")
+    # ProntoNet exporta encabezados en fila 2 (header=1).
+    # Fallback a fila 1 para mantener compatibilidad si cambia el formato.
+    df = pd.DataFrame()
+    _COL_NUMERO = None
+    _COL_DESC = None
+    _COL_UNIDAD = None
+    faltantes: list[str] = []
+    for header_row in (1, 0):
+        df = pd.read_excel(ruta, header=header_row)
+        df.columns = [str(c).strip() for c in df.columns]
+        df = df.dropna(how="all")
 
-    # Nombres de columna esperados (ProntoNet puede exportar con acento)
-    _COL_NUMERO = next(
-        (c for c in df.columns if c.lower() in ("numero", "número")),
-        None,
-    )
-    _COL_DESC = next(
-        (c for c in df.columns if c.lower() == "descripcion"),
-        None,
-    )
-    _COL_UNIDAD = next(
-        (c for c in df.columns if c.lower() == "unidad operativa"),
-        None,
-    )
-    faltantes = [
-        k
-        for k, v in {
-            "Numero": _COL_NUMERO,
-            "Descripcion": _COL_DESC,
-            "Unidad operativa": _COL_UNIDAD,
-        }.items()
-        if v is None
-    ]
+        # Nombres de columna esperados (ProntoNet puede exportar con acento)
+        _COL_NUMERO = next(
+            (c for c in df.columns if c.lower() in ("numero", "número")),
+            None,
+        )
+        _COL_DESC = next(
+            (c for c in df.columns if c.lower() == "descripcion"),
+            None,
+        )
+        _COL_UNIDAD = next(
+            (c for c in df.columns if c.lower() == "unidad operativa"),
+            None,
+        )
+        faltantes = [
+            k
+            for k, v in {
+                "Numero": _COL_NUMERO,
+                "Descripcion": _COL_DESC,
+                "Unidad operativa": _COL_UNIDAD,
+            }.items()
+            if v is None
+        ]
+        if not faltantes:
+            break
+
     if faltantes:
         raise ValueError(
             f"Obras - Pronto Hist.xlsx sin columnas requeridas: {faltantes}"
