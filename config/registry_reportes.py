@@ -55,4 +55,11 @@ REGISTRY_REPORTES: dict[str, dict[str, Any]] = {
         "funcion_scraper": "descargar_detallado_ordenes_pago",
         "columnas_esperadas": [],
     },
+    "debitos_creditos_bancarios": {
+        "archivo_esperado": "Reporte_Debitos_Creditos_Bancarios.xlsx",
+        "activo": True,
+        "tabla_bd_destino": "compensaciones.debitos_creditos_bancarios",
+        "funcion_scraper": "descargar_debitos_creditos",
+        "columnas_esperadas": [],
+    },
 }

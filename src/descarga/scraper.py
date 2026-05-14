@@ -266,6 +266,54 @@ def _descargar_obras(page: Page, nombre_destino: str) -> Path:
     return destino
 
 
+# ─── Descarga especial: Débitos y Créditos Bancarios ────────────────────────
+
+
+def _descargar_debitos_creditos(
+    page: Page, nombre_destino: str
+) -> Path:
+    """
+    Descarga Débitos y Créditos Bancarios (/Valor/).
+    Aplica rango: CC_FECHA_DESDE (fijo 01/04/2026) → hoy.
+    """
+    URL = "http://10.2.1.81/Valor/"
+    fecha_fin = date.today().strftime("%d/%m/%Y")
+    rango_fecha = f"{CC_FECHA_DESDE} - {fecha_fin}"
+
+    logger.info(f"Descargando: {nombre_destino}")
+    page.goto(URL, timeout=TIMEOUT_MS)
+    page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
+    _espera_humana(page, 1500, 2500)
+
+    # Setear rango de fechas y refrescar la grilla
+    page.fill("#filtroFecha", rango_fecha)
+    logger.info(f"  → Fecha seteada: {rango_fecha}")
+    page.keyboard.press("Enter")
+    page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
+    _espera_humana(page, 1000, 2000)
+
+    # Esperar a que DataTables dibuje la tabla
+    page.wait_for_selector(
+        "button.buttons-excel", state="attached", timeout=60000
+    )
+
+    # Mostrar todos los registros antes de exportar
+    page.select_option('select[name="Tabla_length"]', value="-1")
+    logger.info("  → Selector de registros puesto en 'All'...")
+    page.wait_for_load_state("networkidle", timeout=TIMEOUT_MS)
+    _espera_humana(page, 1000, 2000)
+    logger.info("  → Iniciando descarga Excel...")
+
+    with page.expect_download(timeout=TIMEOUT_MS) as dl_info:
+        page.click("button.buttons-excel", force=True)
+
+    download: Download = dl_info.value
+    destino = RUTA_DESCARGA / nombre_destino
+    download.save_as(destino)
+    logger.info(f"  → Guardado en: {destino}")
+    return destino
+
+
 # ─── Orquestador principal ───────────────────────────────────────────────────
 
 
@@ -330,6 +378,8 @@ def descargar_todos_los_reportes(
                     ruta = _descargar_cuenta_corriente(page, nombre)
                 elif funcion == "descargar_obras":
                     ruta = _descargar_obras(page, nombre)
+                elif funcion == "descargar_debitos_creditos":
+                    ruta = _descargar_debitos_creditos(page, nombre)
                 elif funcion in URLS_ESTANDAR:
                     ruta = _descargar_archivo(
                         page,
