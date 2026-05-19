@@ -26,7 +26,7 @@
 
 ## 3) Como llegar al reporte
 
-- **URL exacta de la pantalla del reporte:** http://10.2.1.81/Valor/
+- **URL exacta de la pantalla del reporte:** <http://10.2.1.81/Valor/>
 - **La tabla carga sola o requiere boton:** Requiere botón para aplicar el filtro de fechas.
 - **Si requiere boton, nombre exacto del boton:** Icono de Lupa (azul).
 
