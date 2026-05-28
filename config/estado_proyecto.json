@@ -38,20 +38,6 @@
     }
   ],
   "jornada": {
-    "fin": {
-      "fecha": "2026-05-27",
-      "tareas_completadas": [
-        "Implementar Registry Reportes en procesamiento/enriquecimiento.py",
-        "Eliminar archivos duplicados (Opción 4 híbrida enrutamiento)",
-        "Limpieza de repositorios obsoletos del ecosistema",
-        "Refactor documentación ProntoNet"
-      ],
-      "tareas_pendientes_manana": [
-        "Que el agente M2 (Isindur) ejecute la prueba end-to-end completa con el pipeline de descarga de ProntoNet activado",
-        "Monitorear output real de base de datos vs Registry"
-      ],
-      "notas_qa": "Pipeline refactorizado a arquitectura Registry guiada. Archivos ahora enrutan por configuración y no adivinando columnas. Próxima prueba recae sobre Isindur en M2 para conexión real VPN y Playwright.",
-      "estado_pipeline": "VERDE"
-    }
+    "fin": "2026-05-28"
   }
 }
